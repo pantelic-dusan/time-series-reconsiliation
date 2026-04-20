@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Experiment outputs
+outputs/
+checkpoints/
+
+# Confidential data
+data/
+
+# Model weights / large files
+*.ckpt
+*.pt
+*.bin
+
+# Poetry
+poetry.lock
+
