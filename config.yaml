@@ -1,0 +1,83 @@
+data:
+  data_path: "data/data.csv"
+  target_col: "quantity"
+  time_col: "date"
+  id_cols:
+    - "material"
+    - "customer"
+    - "location"
+  frequency: "MS"  # Month Start
+
+experiment:
+  horizon: 6               # Number of periods to forecast
+  train_end_date: "2024-12-01"  # Last date included in training set
+  seed: 42
+
+models:
+  # --- Statistical ---
+  - name: "arima"
+    params:
+      order: [1, 1, 1]
+      seasonal_order: [1, 1, 1, 12]
+
+  - name: "holt_winters"
+    params:
+      seasonal_periods: 12
+      trend: "add"
+      seasonal: "add"
+
+  - name: "prophet"
+    params:
+      yearly_seasonality: true
+      weekly_seasonality: false
+      daily_seasonality: false
+
+  # --- Classic ML ---
+  - name: "random_forest"
+    params:
+      n_estimators: 100
+      max_depth: 10
+      n_lags: 12
+      strategy: "recursive"  # "recursive" or "direct"
+
+  - name: "lightgbm"
+    params:
+      n_estimators: 100
+      learning_rate: 0.1
+      num_leaves: 31
+      n_lags: 12
+      strategy: "recursive"  # "recursive" or "direct"
+
+  # --- Deep Learning ---
+  - name: "deepar"
+    params:
+      max_epochs: 50
+      hidden_size: 32
+      rnn_layers: 2
+      context_length: 12
+      batch_size: 32
+
+  - name: "nhits"
+    params:
+      max_steps: 1000
+      input_size: 12
+      n_blocks: [1, 1, 1]
+      mlp_units: [[512, 512], [512, 512], [512, 512]]
+      batch_size: 32
+
+  # --- Foundation (pretrained, zero-shot) ---
+  - name: "chronos"
+    params:
+      model_path: "amazon/chronos-t5-small"  # Local HF cache path
+      device: "cpu"
+      context_length: 64
+
+  - name: "timesfm"
+    params:
+      model_path: "google/timesfm-1.0-200m"  # Local HF cache path
+      context_length: 128
+
+storage:
+  output_dir: "outputs"
+  checkpoint_dir: "outputs/checkpoints"
+
