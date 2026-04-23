@@ -13,12 +13,22 @@ experiment:
   train_end_date: "2024-12-01"  # Last date included in training set
   seed: 42
 
+hierarchy:
+  # Base level = material_customer_location at monthly — runs first, always
+  structural_levels:
+    - "material"
+    - "customer"
+    - "location"
+    - "total"
+  temporal_levels:
+    - "quarterly"
+
 models:
   # --- Statistical ---
   - name: "arima"
     params:
-      order: [1, 1, 1]
-      seasonal_order: [1, 1, 1, 12]
+      seasonal_period: 12  # auto_arima selects optimal (p,d,q)(P,D,Q,s) per series
+      n_jobs: -1           # parallel fitting: -1 = all CPU cores
 
   - name: "holt_winters"
     params:
@@ -68,16 +78,18 @@ models:
   # --- Foundation (pretrained, zero-shot) ---
   - name: "chronos"
     params:
-      model_path: "amazon/chronos-t5-small"  # Local HF cache path
+      model_path: "amazon/chronos-bolt-small"  # Chronos 2 (Bolt) — faster and more accurate
       device: "cpu"
       context_length: 64
 
   - name: "timesfm"
     params:
-      model_path: "google/timesfm-1.0-200m"  # Local HF cache path
+      model_path: "google/timesfm-1.0-200m-pytorch"  # PyTorch version — local HF cache
       context_length: 128
 
 storage:
   output_dir: "outputs"
+  forecasts_dir: "outputs/forecasts"
+  evaluations_dir: "outputs/evaluations"
   checkpoint_dir: "outputs/checkpoints"
 

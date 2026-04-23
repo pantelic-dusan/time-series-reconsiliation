@@ -1,8 +1,3 @@
-"""Training entry point: fit all models across all hierarchy levels and save forecasts.
-
-Edit the UPPERCASE constants below to configure a run.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -189,7 +184,8 @@ def run_experiment(config: Dict[str, Any], resume: bool = False) -> None:
     train_end_date = pd.Timestamp(config["experiment"]["train_end_date"])
     train_dataframe = dataframe[dataframe[data_config["time_col"]] <= train_end_date]
 
-    base_output_dir = Path(config["storage"]["output_dir"])
+    storage_config = config["storage"]
+    base_output_dir = Path(storage_config.get("forecasts_dir", storage_config["output_dir"]))
     base_checkpoint_dir = Path(config["storage"]["checkpoint_dir"])
 
     # ---- Base level (raw granularity) ----

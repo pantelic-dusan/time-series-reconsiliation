@@ -113,7 +113,6 @@ outputs/<level>/evaluation_summary.csv
 | Hard-fail coverage check, cleans artifacts    | User asked for this specifically.                     |
 | No cross-level reconciliation / coherence yet | Deferred by user — per-level metrics only for now.    |
 | Checkpoint directory inside `outputs/`        | Matches `config.yaml` default; leave alone.           |
-| `main.py` is a deprecation stub               | Keeps stale invocations failing loudly.               |
 
 ---
 

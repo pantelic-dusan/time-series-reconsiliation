@@ -40,3 +40,7 @@ data/
 # Poetry
 poetry.lock
 
+AGENT.md
+
+logs/
+lightning_logs/

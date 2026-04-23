@@ -138,8 +138,9 @@ def get_level_config(
             if "n_lags" in params:
                 params["n_lags"] = max(ppy, 2)
 
-            # Context length (DeepAR, Chronos, TimesFM)
-            if "context_length" in params:
+            # Context length (DeepAR only — foundation models handle variable length)
+            model_name = model_config.get("name", "")
+            if "context_length" in params and model_name not in ("chronos", "timesfm"):
                 params["context_length"] = max(ppy * 2, 4)
 
             # Input size (N-HiTS)

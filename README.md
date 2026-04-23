@@ -13,7 +13,6 @@ evaluation step scores them with standard KPIs.
 | ---------------------- | ---------------------------------------------------------------------- |
 | `train.py`             | Entry point: fit every model at every level, save forecasts + checkpoints. |
 | `evaluate.py`          | Entry point: score saved forecasts against the test split.            |
-| `main.py`              | Deprecation stub — prints a pointer to the two scripts above.         |
 | `config.yaml`          | Single source of truth for data, horizon, hierarchy, and model params.|
 | `aggregation.py`       | Structural & temporal aggregation + per-level config derivation.      |
 | `evaluation/evaluation.py` | Pure metric functions + `evaluate_model(...)` scorer.             |
@@ -46,14 +45,18 @@ evaluation step scores them with standard KPIs.
 - ~4 GB RAM minimum; foundation models (`chronos`, `timesfm`) benefit from more.
 - Optional GPU for `deepar` / `nhits` / foundation models — CPU works, just slower.
 
-### Install (Poetry)
+### Install
+
+Use **either** Poetry **or** pip — pick one, they're equivalent.
+
+#### Option A — Poetry (recommended)
 
 ```powershell
 poetry install
 poetry shell
 ```
 
-### Install (pip)
+#### Option B — pip + venv
 
 ```powershell
 python -m venv .venv

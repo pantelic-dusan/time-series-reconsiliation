@@ -1,10 +1,3 @@
-"""Evaluation entry point: score every saved forecast CSV against the test split.
-
-Edit the UPPERCASE constants below to configure a run. Produces one
-`evaluation_summary.csv` per hierarchy level directory; no cross-level
-aggregation.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -21,7 +14,7 @@ from aggregation import (
     get_all_levels,
     get_level_config,
 )
-from evaluation import evaluate_model
+from evaluation.evaluation import evaluate_model
 from logging_utils import setup_logging, timed
 
 
@@ -30,7 +23,8 @@ from logging_utils import setup_logging, timed
 # ---------------------------------------------------------------------------
 CONFIG_PATH: str = "config.yaml"
 LOG_FILE: str = "logs/evaluate.log"
-OUTPUT_DIR: Optional[str] = None  # None → take from config["storage"]["output_dir"]
+FORECASTS_DIR: Optional[str] = None  # None -> take from config["storage"]["forecasts_dir"]
+EVALUATIONS_DIR: Optional[str] = None  # None -> take from config["storage"]["evaluations_dir"]
 ONLY_LEVEL: Optional[str] = None  # e.g. "base", "structural__material", "temporal__quarterly"
 
 
@@ -91,12 +85,15 @@ def evaluate_level(
     level_label: str,
     level_config: Dict[str, Any],
     level_test: pd.DataFrame,
-    level_output_dir: Path,
-) -> None:
-    """Score every `*_forecasts.csv` in `level_output_dir` against `level_test`."""
-    if not level_output_dir.is_dir():
-        logger.warning(f"{level_label}: output dir missing ({level_output_dir}), skipping.")
-        return
+    level_forecasts_dir: Path,
+    level_evaluations_dir: Path,
+) -> List[Dict[str, Any]]:
+    """Score every `*_forecasts.csv` in `level_forecasts_dir` against `level_test`."""
+    if not level_forecasts_dir.is_dir():
+        logger.warning(f"{level_label}: forecasts dir missing ({level_forecasts_dir}), skipping.")
+        return []
+
+    level_evaluations_dir.mkdir(parents=True, exist_ok=True)
 
     time_column = level_config["data"]["time_col"]
     target_column = level_config["data"]["target_col"]
@@ -105,7 +102,7 @@ def evaluate_level(
 
     for model_config in level_config["models"]:
         model_name = model_config["name"]
-        forecast_path = level_output_dir / f"{model_name}_forecasts.csv"
+        forecast_path = level_forecasts_dir / f"{model_name}_forecasts.csv"
         if not forecast_path.exists():
             logger.warning(f"{level_label}/{model_name}: no forecast file, skipping.")
             continue
@@ -119,7 +116,7 @@ def evaluate_level(
             summary_rows.append(row)
 
             if not result["per_series"].empty:
-                detail_path = level_output_dir / f"{model_name}_evaluation_detail.csv"
+                detail_path = level_evaluations_dir / f"{model_name}_evaluation_detail.csv"
                 result["per_series"].to_csv(detail_path, index=False)
 
             overall = result["overall"]
@@ -133,16 +130,27 @@ def evaluate_level(
             )
 
     if summary_rows:
-        summary_path = level_output_dir / "evaluation_summary.csv"
+        summary_path = level_evaluations_dir / "evaluation_summary.csv"
         pd.DataFrame(summary_rows).to_csv(summary_path, index=False)
         logger.info(f"{level_label}: summary → {summary_path}")
     else:
         logger.warning(f"{level_label}: no models evaluated.")
 
+    return summary_rows
+
 
 def run_evaluation(config: Dict[str, Any]) -> None:
     test_dataframe = _load_and_split(config)
-    base_output_dir = Path(OUTPUT_DIR or config["storage"]["output_dir"])
+    storage_config = config["storage"]
+    base_forecasts_dir = Path(
+        FORECASTS_DIR or storage_config.get("forecasts_dir", storage_config["output_dir"])
+    )
+    base_evaluations_dir = Path(
+        EVALUATIONS_DIR or storage_config.get("evaluations_dir", storage_config["output_dir"])
+    )
+    base_evaluations_dir.mkdir(parents=True, exist_ok=True)
+
+    cross_level_rows: List[Dict[str, Any]] = []
 
     for level_label, level_type, level_name, group_columns in _enumerate_levels(config):
         if ONLY_LEVEL is not None and level_label != ONLY_LEVEL:
@@ -161,12 +169,22 @@ def run_evaluation(config: Dict[str, Any]) -> None:
                 f"  {level_label}: {level_test['ts_id'].nunique()} series, "
                 f"{len(level_test)} test rows"
             )
-            evaluate_level(
+            level_rows = evaluate_level(
                 level_label=level_label,
                 level_config=level_config,
                 level_test=level_test,
-                level_output_dir=base_output_dir / level_label,
+                level_forecasts_dir=base_forecasts_dir / level_label,
+                level_evaluations_dir=base_evaluations_dir / level_label,
             )
+            for row in level_rows:
+                cross_level_rows.append({"level": level_label, **row})
+
+    if cross_level_rows:
+        cross_level_path = base_evaluations_dir / "kpi_by_level.csv"
+        pd.DataFrame(cross_level_rows).to_csv(cross_level_path, index=False)
+        logger.info(f"Cross-level KPI table → {cross_level_path}")
+    else:
+        logger.warning("No cross-level KPI rows were produced.")
 
 
 # ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict
 
+import joblib
 import pandas as pd
 
 from models.model_interface import ForecastModel
@@ -12,27 +13,31 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 
 class TimesFMModel(ForecastModel):
-    """Google TimesFM zero-shot forecasting model. Fully local inference."""
+    """Google TimesFM zero-shot forecasting model. Fully local inference.
+
+    Pre-download the model once (with internet):
+        python -c "from huggingface_hub import snapshot_download; print(snapshot_download('google/timesfm-1.0-200m'))"
+    """
 
     def __init__(self, params: Dict[str, Any] | None = None):
         super().__init__(model_name="timesfm", params=params)
         self._freq: str | None = None
         self._series_contexts: Dict[str, tuple] = {}
-        self._model_path: str = self.params.get("model_path", "google/timesfm-1.0-200m")
+        self._model_path: str = self.params.get("model_path", "google/timesfm-1.0-200m-pytorch")
 
-    def _load_model(self, horizon: int):
-        """Load TimesFM from local HuggingFace cache."""
+    def _load_model(self):
+        """Load TimesFM from local HuggingFace cache using the updated API."""
         import timesfm
-        self._tfm = timesfm.TimesFm(
-            context_len=self.params.get("context_length", 128),
-            horizon_len=horizon,
-            input_patch_len=32,
-            output_patch_len=128,
-            num_layers=20,
-            model_dims=1280,
+
+        hparams = timesfm.TimesFmHparams(
             backend="cpu",
+            per_core_batch_size=min(32, len(self._series_contexts) if self._series_contexts else 32),
+            horizon_len=128,
         )
-        self._tfm.load_from_checkpoint(repo_id=self._model_path)
+        checkpoint = timesfm.TimesFmCheckpoint(
+            huggingface_repo_id=self._model_path,
+        )
+        self._tfm = timesfm.TimesFm(hparams=hparams, checkpoint=checkpoint)
 
     def fit(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> "TimesFMModel":
         """TimesFM is zero-shot; fit stores context windows per series."""
@@ -47,8 +52,8 @@ class TimesFMModel(ForecastModel):
             last_date = pd.to_datetime(group_dataframe[time_column].iloc[-1])
             self._series_contexts[ts_id] = (context, last_date)
 
-        horizon = config["experiment"]["horizon"]
-        self._load_model(horizon)
+        self._load_model()
+        self._model = self._tfm
         return self
 
     def predict(self, horizon: int, config: Dict[str, Any]) -> pd.DataFrame:
@@ -57,14 +62,15 @@ class TimesFMModel(ForecastModel):
 
         # Batch all contexts for efficient inference
         ts_ids = list(self._series_contexts.keys())
-        contexts = [self._series_contexts[tid][0] for tid in ts_ids]
+        contexts = [self._series_contexts[tid][0].tolist() for tid in ts_ids]
 
-        frequency_input = [0] * len(contexts)  # 0 = monthly in TimesFM convention
-        forecast_output = self._tfm.forecast(contexts, freq=frequency_input)
+        # freq: 0 = monthly in TimesFM convention
+        frequency_input = [0] * len(contexts)
+        point_forecasts, _ = self._tfm.forecast(contexts, freq=frequency_input)
 
         for index, ts_id in enumerate(ts_ids):
             _, last_date = self._series_contexts[ts_id]
-            predictions = forecast_output[index, :horizon]
+            predictions = point_forecasts[index, :horizon]
             future_dates = pd.date_range(start=last_date, periods=horizon + 1, freq=self._freq)[1:]
 
             forecast = pd.DataFrame({
@@ -77,15 +83,16 @@ class TimesFMModel(ForecastModel):
         return pd.concat(all_forecasts, ignore_index=True)
 
     def save(self, path: Path) -> None:
-        import joblib
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump({"series_contexts": self._series_contexts, "freq": self._freq}, path)
 
     def load(self, path: Path) -> "TimesFMModel":
-        import joblib
         path = Path(path)
         data = joblib.load(path)
         self._series_contexts = data["series_contexts"]
         self._freq = data["freq"]
+        # Re-instantiate the model — weights come from the local HF cache.
+        self._load_model()
+        self._model = self._tfm
         return self
