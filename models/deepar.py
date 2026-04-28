@@ -10,11 +10,9 @@ from gluonts.dataset.pandas import PandasDataset
 from gluonts.torch.model.deepar import DeepAREstimator
 from gluonts.torch.model.predictor import PyTorchPredictor
 
+from utils.logging_utils import make_dl_training_logger
 from models.model_interface import ForecastModel
 
-# PyTorch 2.6+ defaults to weights_only=True which blocks GluonTS internal
-# classes during checkpoint loading. Lightning passes weights_only=True explicitly,
-# so we force it to False since all checkpoints are local and trusted.
 _original_torch_load = torch.load
 def _patched_torch_load(*args, **kwargs):
     kwargs["weights_only"] = False
@@ -25,10 +23,6 @@ torch.load = _patched_torch_load
 class DeepARModel(ForecastModel):
     """GluonTS DeepAR wrapper. Trains globally on all series, produces probabilistic forecasts."""
 
-    # GluonTS has a split-brain issue with frequencies:
-    #   - get_lags_for_frequency() / DeepAREstimator accept "MS" (offset alias)
-    #   - PandasDataset.to_period() needs "M" (period alias)
-    # We use PERIOD_FREQ_MAP for the dataset and the original freq for the estimator.
     PERIOD_FREQ_MAP = {"MS": "M", "QS": "Q", "YS": "Y", "AS": "A"}
 
     def __init__(self, params: Dict[str, Any] | None = None):
@@ -58,9 +52,19 @@ class DeepARModel(ForecastModel):
         self._freq = config["data"]["frequency"]
         self._period_freq = self.PERIOD_FREQ_MAP.get(self._freq, self._freq)
         horizon = config["experiment"]["horizon"]
+        time_column = config["data"]["time_col"]
 
+        # Full dataset (used at predict time and as validation_data).
         self._train_dataset = self._build_dataset(dataframe, config)
-        self._validation_dataset = self._train_dataset
+
+
+        df_sorted = dataframe.sort_values([time_column])
+        train_only = (
+            df_sorted.groupby("ts_id", group_keys=False)
+            .apply(lambda g: g.iloc[:-horizon] if len(g) > horizon else g)
+            .reset_index(drop=True)
+        )
+        fit_dataset = self._build_dataset(train_only, config)
 
         context_length = self.params.get("context_length", 12)
 
@@ -75,12 +79,13 @@ class DeepARModel(ForecastModel):
                 "max_epochs": self.params.get("max_epochs", 50),
                 "accelerator": "auto",
                 "enable_progress_bar": True,
+                "logger": make_dl_training_logger("deepar"),
             },
         )
 
         self._predictor = estimator.train(
-            training_data=self._train_dataset,
-            validation_data=self._validation_dataset,
+            training_data=fit_dataset,
+            validation_data=self._train_dataset,
         )
         self._model = self._predictor
         return self
@@ -91,7 +96,6 @@ class DeepARModel(ForecastModel):
 
         all_forecasts = []
         for forecast in forecasts:
-            # Use mean of probabilistic samples as point forecast
             mean_forecast = forecast.mean
             future_dates = pd.date_range(
                 start=forecast.start_date.to_timestamp(),
@@ -108,12 +112,9 @@ class DeepARModel(ForecastModel):
         return pd.concat(all_forecasts, ignore_index=True)
 
     def save(self, path: Path) -> None:
-        # GluonTS serialize() expects a directory, not a file.
-        # Strip .pkl extension and use path as a directory.
         path = Path(path).with_suffix("")
         path.mkdir(parents=True, exist_ok=True)
         self._predictor.serialize(path)
-        # Persist freq info so predict() works after load().
         (path / "_freq.json").write_text(
             json.dumps({"freq": self._freq, "period_freq": self._period_freq})
         )

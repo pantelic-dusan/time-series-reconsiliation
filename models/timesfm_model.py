@@ -48,7 +48,10 @@ class TimesFMModel(ForecastModel):
 
         for ts_id, group_dataframe in dataframe.groupby("ts_id"):
             group_dataframe = group_dataframe.sort_values(time_column).reset_index(drop=True)
-            context = group_dataframe[target_column].values[-context_length:].astype(float)
+            values = group_dataframe[target_column].values.astype(float)
+            # Clamp context_length to available history.
+            effective_length = min(context_length, len(values))
+            context = values[-effective_length:]
             last_date = pd.to_datetime(group_dataframe[time_column].iloc[-1])
             self._series_contexts[ts_id] = (context, last_date)
 

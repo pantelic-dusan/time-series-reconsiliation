@@ -5,6 +5,7 @@ import pandas as pd
 from neuralforecast import NeuralForecast
 from neuralforecast.models import NHITS
 
+from utils.logging_utils import make_dl_training_logger
 from models.model_interface import ForecastModel
 
 
@@ -37,6 +38,7 @@ class NHITSModel(ForecastModel):
             scaler_type="standard",
             val_check_steps=50,
             early_stop_patience_steps=5,
+            logger=make_dl_training_logger("nhits"),
         )
         self._nf = NeuralForecast(models=[model], freq=self._freq)
         self._nf.fit(df=nf_dataframe, val_size=horizon)

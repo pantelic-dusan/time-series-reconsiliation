@@ -1,12 +1,3 @@
-"""Shared logging utilities for train/evaluate entry-point scripts.
-
-Provides:
-    * setup_logging(log_file) - configure the root logger to append to a single
-      accumulating log file plus stderr.
-    * timed(label)            - context manager that logs [START]/[DONE]/[FAIL]
-      with the elapsed wall time of the wrapped block.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -52,15 +43,7 @@ def setup_logging(
     timestamped: bool = True,
     suppress_noisy_output: bool = True,
 ) -> logging.Logger:
-    """Configure the root logger to append to `log_file` (accumulating).
-
-    If `timestamped` is True (default), a ``_YYYYmmdd_HHMMSS`` suffix is
-    inserted before the file extension so each run gets its own file while
-    still living next to previous runs.
-
-    Existing handlers are removed first so the function is idempotent and safe
-    to call from multiple entry points in the same interpreter session.
-    """
+    """Configure the root logger to append to `log_file` (accumulating)."""
     log_path = Path(log_file)
     if timestamped:
         stamp = datetime.now().strftime(RUN_TIMESTAMP_FMT)
@@ -105,10 +88,7 @@ def setup_logging(
 
 @contextmanager
 def timed(label: str, logger: Optional[logging.Logger] = None) -> Iterator[None]:
-    """Log [START]/[DONE]/[FAIL] around a block and report its elapsed time.
-
-    Re-raises any exception after logging it (with traceback) at ERROR level.
-    """
+    """Log [START]/[DONE]/[FAIL] around a block and report its elapsed time."""
     log = logger or logging.getLogger(__name__)
     start = time.perf_counter()
     log.info(f"[START] {label}")
@@ -121,3 +101,17 @@ def timed(label: str, logger: Optional[logging.Logger] = None) -> Iterator[None]
     else:
         elapsed = time.perf_counter() - start
         log.info(f"[DONE] {label} in {elapsed:.1f}s")
+
+
+def make_dl_training_logger(
+    model_name: str,
+    save_dir: str | Path = "logs/dl_training",
+):
+    """Return a Lightning CSVLogger that writes per-epoch train/val loss."""
+    try:
+        from lightning.pytorch.loggers import CSVLogger  # lazy import
+    except ImportError:  # older installs expose Lightning as pytorch_lightning
+        from pytorch_lightning.loggers import CSVLogger
+
+    stamp = datetime.now().strftime(RUN_TIMESTAMP_FMT)
+    return CSVLogger(save_dir=str(save_dir), name=model_name, version=stamp)

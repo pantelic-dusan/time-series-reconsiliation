@@ -16,43 +16,16 @@ class ForecastModel(ABC):
 
     @abstractmethod
     def fit(self, df: pd.DataFrame, config: Dict[str, Any]) -> "ForecastModel":
-        """
-        Train the model on a single time-series DataFrame.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            DataFrame containing the training data.
-        config : dict
-            Full experiment config dict (parsed from config.yaml).
-
-        Returns
-        -------
-        self
-        """
+        """Train the model on a single time-series DataFrame."""
         ...
 
     @abstractmethod
     def predict(self, horizon: int, config: Dict[str, Any]) -> pd.DataFrame:
-        """
-        Generate forecasts for the given horizon.
-
-        Parameters
-        ----------
-        horizon : int
-            Number of future time steps to forecast.
-        config : dict
-            Full experiment config dict.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with columns [time_col, 'forecast'].
-        """
+        """ Generate forecasts for the given horizon. """
         ...
 
     def save(self, path: Path) -> None:
-        """Persist the fitted model to disk."""
+        """Persist the fitted model to disk. """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(self._model, path)

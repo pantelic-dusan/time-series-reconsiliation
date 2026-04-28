@@ -7,15 +7,10 @@ from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
-import yaml
 
-from aggregation import (
-    aggregate_structural,
-    aggregate_temporal,
-    get_all_levels,
-    get_level_config,
-)
-from logging_utils import setup_logging, timed
+from utils.aggregation_utils import iter_levels
+from utils.utils import load_config, load_hpo_results, load_raw_data
+from utils.logging_utils import setup_logging, timed
 from models import MODEL_REGISTRY
 
 
@@ -24,19 +19,10 @@ from models import MODEL_REGISTRY
 # ---------------------------------------------------------------------------
 CONFIG_PATH: str = "config.yaml"
 LOG_FILE: str = "logs/train.log"
-RESUME: bool = False  # Skip models whose forecast CSV already exists
+RESUME: bool = True  # Skip models whose forecast CSV already exists
 
 
 logger = logging.getLogger("train")
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def load_config(path: str = CONFIG_PATH) -> Dict[str, Any]:
-    with open(path, "r") as f:
-        return yaml.safe_load(f)
 
 
 def _cleanup_artifacts(checkpoint_path: Path, results_path: Path) -> None:
@@ -99,10 +85,6 @@ def _check_coverage(
         )
 
 
-# ---------------------------------------------------------------------------
-# Core
-# ---------------------------------------------------------------------------
-
 def run_level(
     config: Dict[str, Any],
     train_dataframe: pd.DataFrame,
@@ -110,6 +92,7 @@ def run_level(
     checkpoint_dir: Path,
     level_label: str,
     resume: bool = False,
+    param_overrides: Dict[str, Dict[str, Any]] | None = None,
 ) -> None:
     """Fit + predict every configured model for one hierarchy level.
 
@@ -123,10 +106,22 @@ def run_level(
 
     for model_config in config["models"]:
         model_name = model_config["name"]
-        model_params = model_config.get("params", {})
+        model_type = model_config.get("type", model_name)
+        model_params = dict(model_config.get("params", {}))
 
-        if model_name not in MODEL_REGISTRY:
-            logger.warning(f"Unknown model '{model_name}', skipping.")
+        if param_overrides:
+            inherit_key = model_config.get("hpo_inherit_from")
+            override_source = inherit_key if inherit_key else model_name
+            overrides = dict(param_overrides.get(override_source, {}))
+            if inherit_key:
+                overrides.pop("strategy", None)
+            if overrides:
+                model_params = {**model_params, **overrides}
+                src_label = f" (inherited from '{inherit_key}')" if inherit_key else ""
+                logger.info(f"  [{model_name}] applying HPO params{src_label}: {overrides}")
+
+        if model_type not in MODEL_REGISTRY:
+            logger.warning(f"Unknown model type '{model_type}' (entry '{model_name}'), skipping.")
             continue
 
         results_path = output_dir / f"{model_name}_forecasts.csv"
@@ -140,9 +135,8 @@ def run_level(
 
         try:
             with timed(task_label, logger):
-                model = MODEL_REGISTRY[model_name](params=model_params)
+                model = MODEL_REGISTRY[model_type](params=model_params)
 
-                # Optional warm-start from checkpoint.
                 used_checkpoint = False
                 if resume and checkpoint_path.exists():
                     logger.info(f"  resuming from checkpoint: {checkpoint_path}")
@@ -157,7 +151,6 @@ def run_level(
                     model.fit(train_dataframe, config)
                     forecast_dataframe = model.predict(horizon, config)
 
-                # Enforce non-negative forecasts.
                 forecast_dataframe["forecast"] = forecast_dataframe["forecast"].clip(lower=0)
 
                 # Hard-fail if not every input ts_id got a full horizon of predictions.
@@ -178,8 +171,7 @@ def run_level(
 def run_experiment(config: Dict[str, Any], resume: bool = False) -> None:
     data_config = config["data"]
 
-    dataframe = pd.read_csv(data_config["data_path"], parse_dates=[data_config["time_col"]])
-    dataframe["ts_id"] = dataframe[data_config["id_cols"]].astype(str).agg("_".join, axis=1)
+    dataframe = load_raw_data(config)
 
     train_end_date = pd.Timestamp(config["experiment"]["train_end_date"])
     train_dataframe = dataframe[dataframe[data_config["time_col"]] <= train_end_date]
@@ -188,37 +180,14 @@ def run_experiment(config: Dict[str, Any], resume: bool = False) -> None:
     base_output_dir = Path(storage_config.get("forecasts_dir", storage_config["output_dir"]))
     base_checkpoint_dir = Path(config["storage"]["checkpoint_dir"])
 
-    # ---- Base level (raw granularity) ----
-    with timed("level=base", logger):
-        run_level(
-            config=config,
-            train_dataframe=train_dataframe,
-            output_dir=base_output_dir / "base",
-            checkpoint_dir=base_checkpoint_dir / "base",
-            level_label="base",
-            resume=resume,
-        )
+    all_hpo_results: Dict[str, Dict[str, Any]] = load_hpo_results(config)
 
-    # ---- Hierarchy levels ----
-    for level_type, level_name, group_columns in get_all_levels(config):
-        level_label = f"{level_type}__{level_name}"
-
+    for level_label, level_config, level_train in iter_levels(config, train_dataframe):
         with timed(f"level={level_label}", logger):
-            level_config = get_level_config(level_type, level_name, config)
-
-            if level_type == "structural":
-                level_train = aggregate_structural(train_dataframe, group_columns, config)
-            elif level_type == "temporal":
-                level_train = aggregate_temporal(train_dataframe, level_name, config)
-            else:
-                logger.warning(f"Unknown level type '{level_type}', skipping.")
-                continue
-
             logger.info(
-                f"  aggregated: {level_train['ts_id'].nunique()} series, "
+                f"  {level_label}: {level_train['ts_id'].nunique()} series, "
                 f"{len(level_train)} train rows"
             )
-
             run_level(
                 config=level_config,
                 train_dataframe=level_train,
@@ -226,14 +195,11 @@ def run_experiment(config: Dict[str, Any], resume: bool = False) -> None:
                 checkpoint_dir=base_checkpoint_dir / level_label,
                 level_label=level_label,
                 resume=resume,
+                param_overrides=all_hpo_results.get(level_label),
             )
 
     logger.info("Experiment complete across all hierarchy levels.")
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 def main() -> int:
     setup_logging(LOG_FILE)

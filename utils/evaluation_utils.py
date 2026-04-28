@@ -1,9 +1,3 @@
-"""Forecast evaluation metrics.
-
-Pure numeric metric functions + a per-model scorer (`evaluate_model`). The
-per-level driver lives in `evaluate.py`.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -15,10 +9,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# Individual metric functions (operate on numpy arrays)
-# ---------------------------------------------------------------------------
+EPS = 1e-8
 
 def mean_absolute_error(actual: np.ndarray, forecast: np.ndarray) -> float:
     """MAE = mean(|actual - forecast|)"""
@@ -31,20 +22,14 @@ def root_mean_squared_error(actual: np.ndarray, forecast: np.ndarray) -> float:
 
 
 def mean_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """MAPE = mean(|actual - forecast| / |actual|) * 100.  Skips zeros in actual."""
-    mask = actual != 0
-    if not mask.any():
-        return np.nan
-    return float(np.mean(np.abs((actual[mask] - forecast[mask]) / actual[mask])) * 100)
+    """MAPE = mean(|actual - forecast| / (|actual| + EPS)) * 100.  EPS guards against zero actuals."""
+    return float(np.mean(np.abs((actual - forecast) / (np.abs(actual) + EPS))) * 100)
 
 
 def symmetric_mean_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """sMAPE = mean(2 * |actual - forecast| / (|actual| + |forecast|)) * 100"""
-    denominator = np.abs(actual) + np.abs(forecast)
-    mask = denominator != 0
-    if not mask.any():
-        return np.nan
-    return float(np.mean(2.0 * np.abs(actual[mask] - forecast[mask]) / denominator[mask]) * 100)
+    """sMAPE = mean(2 * |actual - forecast| / (|actual| + |forecast| + EPS)) * 100.  EPS guards against double-zero pairs."""
+    denominator = np.maximum(np.abs(actual) + np.abs(forecast), EPS)
+    return float(np.mean(2.0 * np.abs(actual - forecast) / denominator) * 100)
 
 
 def bias(actual: np.ndarray, forecast: np.ndarray) -> float:
@@ -53,11 +38,9 @@ def bias(actual: np.ndarray, forecast: np.ndarray) -> float:
 
 
 def tracking_signal(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """TS = cumulative_error / MAD.  Values far from 0 indicate systematic bias."""
+    """TS = cumulative_error / MAD.  Values far from 0 indicate systematic bias.  Returns 0.0 for a perfect forecast."""
     errors = forecast - actual
-    mad = np.mean(np.abs(errors))
-    if mad == 0:
-        return np.nan
+    mad = max(float(np.mean(np.abs(errors))), EPS)
     return float(np.sum(errors) / mad)
 
 
@@ -71,16 +54,10 @@ def r_squared(actual: np.ndarray, forecast: np.ndarray) -> float:
 
 
 def weighted_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """WAPE = sum(|actual - forecast|) / sum(|actual|) * 100.  Robust to zeros."""
-    total_actual = np.sum(np.abs(actual))
-    if total_actual == 0:
-        return np.nan
+    """WAPE = sum(|actual - forecast|) / sum(|actual|) * 100.  EPS guards against all-zero series."""
+    total_actual = max(float(np.sum(np.abs(actual))), EPS)
     return float(np.sum(np.abs(actual - forecast)) / total_actual * 100)
 
-
-# ---------------------------------------------------------------------------
-# All metrics in one call
-# ---------------------------------------------------------------------------
 
 ALL_METRICS = {
     "MAE": mean_absolute_error,
@@ -99,25 +76,13 @@ def compute_metrics(actual: np.ndarray, forecast: np.ndarray) -> Dict[str, float
     return {name: func(actual, forecast) for name, func in ALL_METRICS.items()}
 
 
-# ---------------------------------------------------------------------------
-# Per-model scoring
-# ---------------------------------------------------------------------------
-
 def evaluate_model(
     forecast_dataframe: pd.DataFrame,
     test_dataframe: pd.DataFrame,
     time_column: str,
     target_column: str,
 ) -> Dict[str, Any]:
-    """Evaluate a single model's forecasts against actuals.
-
-    Args:
-        forecast_dataframe: Must have columns [time_column, "forecast", "ts_id"]
-        test_dataframe:     Must have columns [time_column, target_column, "ts_id"]
-
-    Returns:
-        {"overall": {metric: value, ...}, "per_series": DataFrame}
-    """
+    """Evaluate a single model's forecasts against actuals."""
     forecast_dataframe = forecast_dataframe.copy()
     forecast_dataframe[time_column] = pd.to_datetime(forecast_dataframe[time_column])
 

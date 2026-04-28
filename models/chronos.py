@@ -1,5 +1,3 @@
-"""Amazon Chronos zero-shot forecasting model wrapper."""
-
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -18,11 +16,6 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 class ChronosModel(ForecastModel):
     """Amazon Chronos zero-shot forecasting model using ChronosPipeline.
-
-    Chronos is a pretrained foundation model — it requires no training.
-    fit() stores context windows per series, predict() generates forecasts
-    using the pretrained weights from the local HuggingFace cache.
-
     Pre-download the model once (with internet):
         huggingface-cli download amazon/chronos-t5-small
     """
@@ -36,11 +29,7 @@ class ChronosModel(ForecastModel):
         self._pipeline: ChronosPipeline | None = None
 
     def _load_pipeline(self):
-        """Load the Chronos pipeline from local HuggingFace cache.
-
-        Automatically selects ChronosBoltPipeline for Bolt models
-        and ChronosPipeline for original T5 models.
-        """
+        """Load the Chronos pipeline from local HuggingFace cache. """
         pipeline_class = (
             ChronosBoltPipeline if "bolt" in self._model_path.lower()
             else ChronosPipeline
@@ -54,7 +43,6 @@ class ChronosModel(ForecastModel):
         self._is_bolt = isinstance(self._pipeline, ChronosBoltPipeline)
 
     def fit(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> "ChronosModel":
-        """Chronos is zero-shot; fit() stores context windows per series."""
         target_column = config["data"]["target_col"]
         time_column = config["data"]["time_col"]
         self._freq = config["data"]["frequency"]
@@ -62,7 +50,9 @@ class ChronosModel(ForecastModel):
 
         for ts_id, group_dataframe in dataframe.groupby("ts_id"):
             group_dataframe = group_dataframe.sort_values(time_column).reset_index(drop=True)
-            context = group_dataframe[target_column].values[-context_length:].astype(float)
+            values = group_dataframe[target_column].values.astype(float)
+            effective_length = min(context_length, len(values))
+            context = values[-effective_length:]
             last_date = pd.to_datetime(group_dataframe[time_column].iloc[-1])
             self._series_contexts[ts_id] = (context, last_date)
 
@@ -74,25 +64,26 @@ class ChronosModel(ForecastModel):
         time_column = config["data"]["time_col"]
         all_forecasts = []
 
-        # Batch all contexts into a list of tensors for efficient inference
         ts_ids = list(self._series_contexts.keys())
         context_tensors = [
             torch.tensor(self._series_contexts[ts_id][0], dtype=torch.float32)
             for ts_id in ts_ids
         ]
 
-        # ChronosPipeline.predict returns shape (num_series, num_samples, horizon)
         with torch.no_grad():
             forecast_samples = self._pipeline.predict(
                 inputs=context_tensors,
                 prediction_length=horizon,
             )
 
-        # Bolt returns (num_series, num_quantiles, horizon) — take median (index 4 = 0.5 quantile)
-        # Original returns (num_series, num_samples, horizon) — take median across samples
+
         if self._is_bolt:
-            # Quantile index 4 = 0.5 (median) based on [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-            point_forecasts = forecast_samples[:, 4, :].cpu().numpy()
+            quantiles = getattr(self._pipeline, "quantiles", None)
+            if quantiles is not None and 0.5 in list(quantiles):
+                median_index = list(quantiles).index(0.5)
+            else:
+                median_index = forecast_samples.shape[1] // 2
+            point_forecasts = forecast_samples[:, median_index, :].cpu().numpy()
         else:
             point_forecasts = forecast_samples.median(dim=1).values.cpu().numpy()
 

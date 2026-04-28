@@ -1,0 +1,238 @@
+data:
+  data_path: "data/data.csv"
+  target_col: "quantity"
+  time_col: "date"
+  id_cols:
+    - "material"
+    - "customer"
+    - "location"
+  frequency: "MS"  # Month Start
+
+experiment:
+  horizon: 6               # Number of periods to forecast
+  train_end_date: "2024-12-01"  # Last date included in training set
+  seed: 42
+
+hpo:
+  num_val_periods: 3         # Last N base-frequency periods held out for HPO validation
+  n_trials: 10               # Optuna trials per model per level
+  objective: "WAPE"          # Metric to minimise (from evaluation/evaluation.py)
+  sample_frac: null          # null = use all series; float in (0, 1] = fraction of ts_ids to sample for HPO
+  output_config: "config_tuned.yaml"  # Written by tune.py; consumed by train.py
+
+hierarchy:
+  # Base level = material_customer_location at monthly — runs first, always
+  structural_levels:
+    - "material"
+    - "customer"
+    - "location"
+    - "total"
+
+models:
+  # --- Statistical ---
+  - name: "arima"
+    params:
+      seasonal_period: 12  # auto_arima selects optimal (p,d,q)(P,D,Q,s) per series
+      n_jobs: -1           # parallel fitting: -1 = all CPU cores
+    hpo:
+      enabled: true
+      # auto_arima already does internal order selection; outer HPO only picks
+      # the seasonal period m. Tiny grid -> runs as GridSampler (2 trials).
+      search_space:
+        seasonal_period:
+          type: categorical
+          choices: [6, 12]
+
+  - name: "holt_winters"
+    params:
+      seasonal_periods: 12
+      trend: "add"
+      seasonal: "add"
+    hpo:
+      enabled: true
+      search_space:
+        trend:
+          type: categorical
+          choices: ["add"]
+        seasonal:
+          type: categorical
+          choices: ["add"]
+
+  - name: "prophet"
+    params:
+      yearly_seasonality: true
+      weekly_seasonality: false
+      daily_seasonality: false
+      n_jobs: -1   # parallel per-series fitting via joblib (consumed by wrapper, not Prophet)
+    hpo:
+      enabled: true
+      search_space:
+        changepoint_prior_scale:
+          type: float
+          low: 0.001
+          high: 0.5
+          log: true
+        seasonality_prior_scale:
+          type: float
+          low: 0.01
+          high: 10.0
+          log: true
+
+  # --- Classic ML ---
+  # Two entries per tree model: HPO runs on the recursive variant; the direct
+  # variant inherits the same tuned hyperparameters via shared HPO key
+  # (`type` selects the registry class, `name` is the output/HPO key).
+  - name: "random_forest"
+    type: "random_forest"
+    params:
+      n_estimators: 100
+      max_depth: 10
+      n_lags: 24
+      strategy: "recursive"
+      n_jobs: -1   # parallel tree fitting (forwarded to RandomForestRegressor)
+    hpo:
+      enabled: true
+      search_space:
+        n_estimators:
+          type: int
+          low: 50
+          high: 500
+        max_depth:
+          type: int
+          low: 3
+          high: 20
+        min_samples_split:
+          type: int
+          low: 2
+          high: 20
+        min_samples_leaf:
+          type: int
+          low: 1
+          high: 10
+        n_lags:
+          type: categorical
+          choices: [6, 12, 24]
+
+  - name: "random_forest_direct"
+    type: "random_forest"
+    hpo_inherit_from: "random_forest"
+    params:
+      n_estimators: 100
+      max_depth: 10
+      n_lags: 24
+      strategy: "direct"
+      n_jobs: -1
+    hpo:
+      enabled: false   # reuse hyperparameters tuned on the recursive variant
+
+  - name: "lightgbm"
+    type: "lightgbm"
+    params:
+      n_estimators: 100
+      learning_rate: 0.1
+      num_leaves: 31
+      n_lags: 24
+      strategy: "recursive"
+    hpo:
+      enabled: true
+      search_space:
+        n_estimators:
+          type: int
+          low: 50
+          high: 500
+        learning_rate:
+          type: float
+          low: 0.005
+          high: 0.3
+          log: true
+        num_leaves:
+          type: int
+          low: 16
+          high: 256
+        min_child_samples:
+          type: int
+          low: 5
+          high: 100
+        n_lags:
+          type: categorical
+          choices: [6, 12, 24]
+
+  - name: "lightgbm_direct"
+    type: "lightgbm"
+    hpo_inherit_from: "lightgbm"
+    params:
+      n_estimators: 100
+      learning_rate: 0.1
+      num_leaves: 31
+      n_lags: 24
+      strategy: "direct"
+    hpo:
+      enabled: false   # reuse hyperparameters tuned on the recursive variant
+
+  # --- Deep Learning ---
+  - name: "deepar"
+    params:
+      max_epochs: 50
+      hidden_size: 32
+      rnn_layers: 2
+      context_length: 24
+      batch_size: 32
+    hpo:
+      enabled: true
+      max_epochs_hpo: 10    # trial budget cap; final fit uses params.max_epochs
+      search_space:
+        hidden_size:
+          type: categorical
+          choices: [16, 32, 64, 128]
+        rnn_layers:
+          type: int
+          low: 1
+          high: 3
+        context_length:
+          type: int
+          low: 6
+          high: 24
+        batch_size:
+          type: categorical
+          choices: [16, 32, 64]
+
+  - name: "nhits"
+    params:
+      max_steps: 1000
+      input_size: 24
+      n_blocks: [1, 1, 1]
+      mlp_units: [[512, 512], [512, 512], [512, 512]]
+      batch_size: 32
+    hpo:
+      enabled: true
+      max_steps_hpo: 200    # trial budget cap; final fit uses params.max_steps
+      search_space:
+        input_size:
+          type: categorical
+          choices: [12, 24]
+        batch_size:
+          type: categorical
+          choices: [16, 32, 64]
+
+  # --- Foundation (pretrained, zero-shot) ---
+  - name: "chronos"
+    params:
+      model_path: "amazon/chronos-bolt-small"  # Chronos 2 (Bolt) — faster and more accurate
+      device: "cpu"
+      context_length: 64
+    hpo:
+      enabled: false  # Zero-shot pretrained; no trainable hyperparameters
+
+  - name: "timesfm"
+    params:
+      model_path: "google/timesfm-1.0-200m-pytorch"  # PyTorch version — local HF cache
+      context_length: 128
+    hpo:
+      enabled: false  # Zero-shot pretrained; no trainable hyperparameters
+
+storage:
+  output_dir: "outputs"
+  forecasts_dir: "outputs/forecasts"
+  evaluations_dir: "outputs/evaluations"
+  checkpoint_dir: "outputs/checkpoints"
+
