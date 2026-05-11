@@ -26,14 +26,37 @@ class TimesFMModel(ForecastModel):
         self._model_path: str = self.params.get("model_path", "google/timesfm-1.0-200m-pytorch")
 
     def _load_model(self):
-        """Load TimesFM from local HuggingFace cache using the updated API."""
+        """Load TimesFM from local HuggingFace cache using the updated API.
+
+        TimesFM 2.0 (``google/timesfm-2.0-500m-pytorch``) requires a different
+        architecture (50 layers, 1280-dim, no positional embeddings, longer
+        output patch). We detect the version from ``model_path`` and pass the
+        correct hparams; defaults below match the 1.0-200m checkpoint.
+        """
         import timesfm
 
-        hparams = timesfm.TimesFmHparams(
-            backend="cpu",
-            per_core_batch_size=min(32, len(self._series_contexts) if self._series_contexts else 32),
-            horizon_len=128,
+        is_v2 = "2.0" in self._model_path
+        per_core_batch_size = min(
+            32, len(self._series_contexts) if self._series_contexts else 32
         )
+
+        if is_v2:
+            hparams = timesfm.TimesFmHparams(
+                backend="cpu",
+                per_core_batch_size=per_core_batch_size,
+                horizon_len=128,
+                num_layers=50,
+                model_dims=1280,
+                input_patch_len=32,
+                output_patch_len=128,
+                use_positional_embedding=False,
+            )
+        else:
+            hparams = timesfm.TimesFmHparams(
+                backend="cpu",
+                per_core_batch_size=per_core_batch_size,
+                horizon_len=128,
+            )
         checkpoint = timesfm.TimesFmCheckpoint(
             huggingface_repo_id=self._model_path,
         )

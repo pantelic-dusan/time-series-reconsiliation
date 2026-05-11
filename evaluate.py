@@ -16,7 +16,7 @@ from utils.logging_utils import setup_logging, timed
 # ---------------------------------------------------------------------------
 # Script-level configuration
 # ---------------------------------------------------------------------------
-CONFIG_PATH: str = "config.yaml"
+CONFIG_PATH: str = "config/config.yaml"
 LOG_FILE: str = "logs/evaluate.log"
 FORECASTS_DIR: Optional[str] = None  # None -> take from config["storage"]["forecasts_dir"]
 EVALUATIONS_DIR: Optional[str] = None  # None -> take from config["storage"]["evaluations_dir"]
@@ -75,11 +75,10 @@ def evaluate_level(
             overall = result["overall"]
             logger.info(
                 f"  {model_name}: "
-                f"MAE={overall.get('MAE', float('nan')):.2f}  "
-                f"RMSE={overall.get('RMSE', float('nan')):.2f}  "
-                f"WAPE={overall.get('WAPE', float('nan')):.1f}%  "
-                f"BIAS={overall.get('BIAS', float('nan')):.2f}  "
-                f"R2={overall.get('R2', float('nan')):.3f}"
+                f"WMAPE={overall.get('WMAPE', float('nan')):.1f}%  "
+                f"nRMSE={overall.get('nRMSE', float('nan')):.1f}%  "
+                f"sMAPE={overall.get('sMAPE', float('nan')):.1f}%  "
+                f"BIAS_PCT={overall.get('BIAS_PCT', float('nan')):.2f}%"
             )
 
     if summary_rows:

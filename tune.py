@@ -10,7 +10,7 @@ import optuna
 import pandas as pd
 from optuna.samplers import GridSampler, TPESampler
 
-from utils.aggregation_utils import iter_levels
+from utils.aggregation_utils import get_level_sample_frac, iter_levels
 from utils.utils import load_config, load_hpo_results, load_raw_data, write_hpo_results
 from utils.evaluation_utils import compute_metrics
 from utils.logging_utils import setup_logging, timed
@@ -20,7 +20,7 @@ from models import MODEL_REGISTRY
 # ---------------------------------------------------------------------------
 # Script-level configuration
 # ---------------------------------------------------------------------------
-CONFIG_PATH: str = "config.yaml"
+CONFIG_PATH: str = "config/config.yaml"
 LOG_FILE: str = "logs/tune.log"
 RESUME: bool = True  # Skip (level, model) pairs already present in the output tuned config
 
@@ -103,7 +103,7 @@ def _score_forecast(
     time_col: str,
     target_col: str,
 ) -> float:
-    """Merge forecast with val actuals and return WAPE. Raises on failure."""
+    """Merge forecast with val actuals and return WMAPE. Raises on failure."""
     forecast_df = forecast_df.copy()
     forecast_df[time_col] = pd.to_datetime(forecast_df[time_col])
     val = val_df.copy()
@@ -125,9 +125,9 @@ def _score_forecast(
         merged[target_col].values.astype(float),
         merged["forecast"].values.astype(float),
     )
-    score = metrics.get("WAPE")
+    score = metrics.get("WMAPE")
     if score is None or not np.isfinite(score):
-        raise RuntimeError(f"Non-finite WAPE returned: {score!r}")
+        raise RuntimeError(f"Non-finite WMAPE returned: {score!r}")
     return float(score)
 
 
@@ -217,9 +217,30 @@ def tune_level(
 
         base_params = copy.deepcopy(model_config.get("params", {}))
 
+        horizon_override = model_hpo.get("horizon_override")
+        if horizon_override is not None and horizon_override < trial_horizon:
+            time_col = level_config["data"]["time_col"]
+            model_trial_horizon = int(horizon_override)
+            model_trial_val_df = (
+                trial_val_df.sort_values([time_col])
+                .groupby("ts_id", sort=False)
+                .head(model_trial_horizon)
+                .copy()
+            )
+            model_trial_config = copy.deepcopy(level_config)
+            model_trial_config["experiment"]["horizon"] = model_trial_horizon
+            logger.info(
+                f"  [{level_label}/{model_name}] horizon_override={model_trial_horizon} "
+                f"(val rows {len(trial_val_df)} → {len(model_trial_val_df)})"
+            )
+        else:
+            model_trial_horizon = trial_horizon
+            model_trial_val_df = trial_val_df
+            model_trial_config = trial_config
+
         logger.info(
             f"  [{level_label}/{model_name}] starting {n_trials} trials "
-            f"(trial_horizon={trial_horizon})"
+            f"(trial_horizon={model_trial_horizon})"
         )
 
         with timed(f"hpo {level_label}/{model_name}", logger):
@@ -233,7 +254,8 @@ def tune_level(
                     f"({effective_n_trials} combinations <= n_trials={n_trials})"
                 )
             else:
-                sampler = TPESampler(seed=seed)
+                n_startup = max(5, n_trials // 4)
+                sampler = TPESampler(seed=seed, n_startup_trials=n_startup)
                 effective_n_trials = n_trials
             study = optuna.create_study(direction="minimize", sampler=sampler)
             objective = build_objective(
@@ -242,8 +264,8 @@ def tune_level(
                 base_params=base_params,
                 model_hpo=model_hpo,
                 trial_train_df=trial_train_df,
-                trial_val_df=trial_val_df,
-                trial_config=trial_config,
+                trial_val_df=model_trial_val_df,
+                trial_config=model_trial_config,
             )
 
             def _trial_progress(study: optuna.Study, trial: optuna.trial.FrozenTrial,
@@ -253,7 +275,7 @@ def tune_level(
                 best = study.best_value if study.best_trial is not None else float("nan")
                 logger.info(
                     f"    [{_level}/{_model}] trial {trial.number + 1}/{_total} "
-                    f"WAPE={value:.3f}%  best={best:.3f}%  params={trial.params}"
+                    f"WMAPE={value:.3f}%  best={best:.3f}%  params={trial.params}"
                 )
 
             study.optimize(
@@ -264,7 +286,7 @@ def tune_level(
             )
 
         logger.info(
-            f"  [{level_label}/{model_name}] best WAPE={study.best_value:.3f}%  "
+            f"  [{level_label}/{model_name}] best WMAPE={study.best_value:.3f}%  "
             f"params={study.best_params}"
         )
         best_params_map[model_name] = study.best_params
@@ -277,18 +299,32 @@ def tune_level(
 def _iter_tuning_levels(
     config: Dict[str, Any],
     dataframe: pd.DataFrame,
-    hpo_train_cutoff: pd.Timestamp,
     train_end_date: pd.Timestamp,
 ) -> Iterator[Tuple[str, Dict[str, Any], pd.DataFrame, pd.DataFrame]]:
     """Yield (level_label, level_config, level_train, level_val) for every
-    hierarchy level including base"""
+    hierarchy level including base.    """
     time_col = config["data"]["time_col"]
+    seed = config["experiment"].get("seed", 42)
     in_range = dataframe[dataframe[time_col] <= train_end_date].copy()
 
     for level_label, level_config, level_frame in iter_levels(config, in_range):
-        train = level_frame[level_frame[time_col] <= hpo_train_cutoff].copy()
+        sample_frac = get_level_sample_frac(level_label, config)
+        if sample_frac is not None:
+            all_ids = level_frame["ts_id"].unique()
+            sample_n = max(1, int(round(len(all_ids) * sample_frac)))
+            rng = np.random.default_rng(seed)
+            sampled = rng.choice(all_ids, size=sample_n, replace=False)
+            level_frame = level_frame[level_frame["ts_id"].isin(sampled)].copy()
+            logger.info(
+                f"  [{level_label}] HPO sampling: {sample_n}/{len(all_ids)} ts_ids "
+                f"({sample_frac:.0%}, seed={seed})"
+            )
+
+        level_num_val = level_config["hpo"]["num_val_periods"]
+        level_cutoff = train_end_date - pd.DateOffset(months=level_num_val)
+        train = level_frame[level_frame[time_col] <= level_cutoff].copy()
         val = level_frame[
-            (level_frame[time_col] > hpo_train_cutoff)
+            (level_frame[time_col] > level_cutoff)
             & (level_frame[time_col] <= train_end_date)
         ].copy()
         yield level_label, level_config, train, val
@@ -299,20 +335,6 @@ def run_tuning(config: Dict[str, Any], resume: bool = False) -> None:
 
     dataframe = load_raw_data(config)
     hpo_train_cutoff, train_end_date = compute_val_dates(config)
-
-    # Optional subsample of ts_ids for faster HPO.
-    sample_frac = global_hpo.get("sample_frac")
-    if sample_frac is not None and sample_frac > 0 and sample_frac < 1:
-        all_ids = dataframe["ts_id"].unique()
-        sample_n = max(1, int(round(len(all_ids) * sample_frac)))
-        seed = config["experiment"].get("seed", 42)
-        rng = np.random.default_rng(seed)
-        sampled = rng.choice(all_ids, size=sample_n, replace=False)
-        dataframe = dataframe[dataframe["ts_id"].isin(sampled)].copy()
-        logger.info(
-            f"HPO sampling: using {sample_n}/{len(all_ids)} ts_ids "
-            f"({sample_frac:.0%}, seed={seed})"
-        )
 
     logger.info(
         f"HPO split — train: <= {hpo_train_cutoff.date()}, "
@@ -329,7 +351,7 @@ def run_tuning(config: Dict[str, Any], resume: bool = False) -> None:
         write_hpo_results(config, hpo_results)
 
     for level_label, level_config, level_train, level_val in _iter_tuning_levels(
-        config, dataframe, hpo_train_cutoff, train_end_date
+        config, dataframe, train_end_date
     ):
         with timed(f"hpo level={level_label}", logger):
             logger.info(

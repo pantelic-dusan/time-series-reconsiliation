@@ -28,7 +28,7 @@ def load_raw_data(config: Dict[str, Any]) -> pd.DataFrame:
     return dataframe
 
 
-_DEFAULT_TUNED_CONFIG = "config_tuned.yaml"
+_DEFAULT_TUNED_CONFIG = "config/config_tuned.yaml"
 
 
 def tuned_config_path(config: Dict[str, Any]) -> Path:

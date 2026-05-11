@@ -17,7 +17,7 @@ from models import MODEL_REGISTRY
 # ---------------------------------------------------------------------------
 # Script-level configuration (edit in-place instead of using CLI flags)
 # ---------------------------------------------------------------------------
-CONFIG_PATH: str = "config.yaml"
+CONFIG_PATH: str = "config/config.yaml"
 LOG_FILE: str = "logs/train.log"
 RESUME: bool = True  # Skip models whose forecast CSV already exists
 

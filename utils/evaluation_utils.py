@@ -11,19 +11,25 @@ logger = logging.getLogger(__name__)
 
 EPS = 1e-8
 
-def mean_absolute_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """MAE = mean(|actual - forecast|)"""
-    return float(np.mean(np.abs(actual - forecast)))
-
-
-def root_mean_squared_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """RMSE = sqrt(mean((actual - forecast)^2))"""
-    return float(np.sqrt(np.mean((actual - forecast) ** 2)))
+def normalized_root_mean_squared_error(actual: np.ndarray, forecast: np.ndarray) -> float:
+    """nRMSE = RMSE / mean(|actual|) * 100.  Scale-free, comparable across hierarchy levels.
+    Returns NaN for all-zero series."""
+    mean_abs_actual = float(np.mean(np.abs(actual)))
+    if mean_abs_actual <= EPS:
+        return float("nan")
+    rmse = float(np.sqrt(np.mean((actual - forecast) ** 2)))
+    return rmse / mean_abs_actual * 100
 
 
 def mean_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """MAPE = mean(|actual - forecast| / (|actual| + EPS)) * 100.  EPS guards against zero actuals."""
-    return float(np.mean(np.abs((actual - forecast) / (np.abs(actual) + EPS))) * 100)
+    """MAPE = mean(|actual - forecast| / |actual|) * 100, computed only over rows where |actual| > EPS.
+    Returns NaN if no rows qualify (e.g., all-zero series)."""
+    actual = np.asarray(actual, dtype=float)
+    forecast = np.asarray(forecast, dtype=float)
+    mask = np.abs(actual) > EPS
+    if not np.any(mask):
+        return float("nan")
+    return float(np.mean(np.abs((actual[mask] - forecast[mask]) / actual[mask])) * 100)
 
 
 def symmetric_mean_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
@@ -32,9 +38,13 @@ def symmetric_mean_absolute_percentage_error(actual: np.ndarray, forecast: np.nd
     return float(np.mean(2.0 * np.abs(actual - forecast) / denominator) * 100)
 
 
-def bias(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """BIAS = mean(forecast - actual).  Positive = over-forecasting."""
-    return float(np.mean(forecast - actual))
+def bias_percentage(actual: np.ndarray, forecast: np.ndarray) -> float:
+    """BIAS% = mean(forecast - actual) / mean(|actual|) * 100.  Sign preserved (positive = over-forecasting).
+    Scale-free, comparable across hierarchy levels.  Returns NaN for all-zero series."""
+    mean_abs_actual = float(np.mean(np.abs(actual)))
+    if mean_abs_actual <= EPS:
+        return float("nan")
+    return float(np.mean(forecast - actual) / mean_abs_actual * 100)
 
 
 def tracking_signal(actual: np.ndarray, forecast: np.ndarray) -> float:
@@ -44,30 +54,33 @@ def tracking_signal(actual: np.ndarray, forecast: np.ndarray) -> float:
     return float(np.sum(errors) / mad)
 
 
-def r_squared(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """R² = 1 - SS_res / SS_tot.  1 = perfect, 0 = as good as mean, negative = worse."""
-    ss_residual = np.sum((actual - forecast) ** 2)
-    ss_total = np.sum((actual - np.mean(actual)) ** 2)
-    if ss_total == 0:
-        return np.nan
-    return float(1.0 - ss_residual / ss_total)
-
-
 def weighted_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
-    """WAPE = sum(|actual - forecast|) / sum(|actual|) * 100.  EPS guards against all-zero series."""
-    total_actual = max(float(np.sum(np.abs(actual))), EPS)
+    """WMAPE = sum(|actual - forecast|) / sum(|actual|) * 100.  Returns NaN for all-zero series."""
+    total_actual = float(np.sum(np.abs(actual)))
+    if total_actual <= EPS:
+        return float("nan")
     return float(np.sum(np.abs(actual - forecast)) / total_actual * 100)
 
 
+def median_absolute_percentage_error(actual: np.ndarray, forecast: np.ndarray) -> float:
+    """MdAPE = median(|actual - forecast| / |actual|) * 100, computed only over rows where |actual| > EPS.
+    Returns NaN if no rows qualify."""
+    actual = np.asarray(actual, dtype=float)
+    forecast = np.asarray(forecast, dtype=float)
+    mask = np.abs(actual) > EPS
+    if not np.any(mask):
+        return float("nan")
+    return float(np.median(np.abs((actual[mask] - forecast[mask]) / actual[mask])) * 100)
+
+
 ALL_METRICS = {
-    "MAE": mean_absolute_error,
-    "RMSE": root_mean_squared_error,
+    "WMAPE": weighted_absolute_percentage_error,
+    "nRMSE": normalized_root_mean_squared_error,
     "MAPE": mean_absolute_percentage_error,
+    "MdAPE": median_absolute_percentage_error,
     "sMAPE": symmetric_mean_absolute_percentage_error,
-    "BIAS": bias,
+    "BIAS_PCT": bias_percentage,
     "TS": tracking_signal,
-    "R2": r_squared,
-    "WAPE": weighted_absolute_percentage_error,
 }
 
 
@@ -106,10 +119,6 @@ def evaluate_model(
     actual = merged[target_column].values
     forecast = merged["forecast"].values
 
-    overall = compute_metrics(actual, forecast)
-    overall["num_series"] = merged["ts_id"].nunique()
-    overall["num_predictions"] = len(merged)
-
     per_series_rows = []
     for ts_id, group in merged.groupby("ts_id"):
         series_actual = group[target_column].values
@@ -118,7 +127,17 @@ def evaluate_model(
         row.update(compute_metrics(series_actual, series_forecast))
         per_series_rows.append(row)
 
+    per_series_df = pd.DataFrame(per_series_rows)
+
+    # Level-aggregate metric = mean of per-series metrics (NaN-safe).
+    overall = {
+        name: float(np.nanmean(per_series_df[name].values)) if name in per_series_df else np.nan
+        for name in ALL_METRICS
+    }
+    overall["num_series"] = merged["ts_id"].nunique()
+    overall["num_predictions"] = len(merged)
+
     return {
         "overall": overall,
-        "per_series": pd.DataFrame(per_series_rows),
+        "per_series": per_series_df,
     }

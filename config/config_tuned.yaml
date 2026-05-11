@@ -6,57 +6,40 @@ hpo_results:
       trend: add
       seasonal: add
     prophet:
-      changepoint_prior_scale: 0.0026368755339723046
-      seasonality_prior_scale: 0.029375384576328288
-    random_forest:
-      n_estimators: 105
-      max_depth: 11
-      min_samples_split: 2
-      min_samples_leaf: 10
-      n_lags: 10
-    lightgbm:
-      n_estimators: 325
-      learning_rate: 0.008851384099881301
-      num_leaves: 86
-      min_child_samples: 40
-      n_lags: 14
-    deepar:
-      hidden_size: 64
-      rnn_layers: 1
-      context_length: 9
-      batch_size: 64
-    nhits:
-      input_size: 12
-      batch_size: 16
-  structural__material:
-    arima:
-      seasonal_period: 6
-    holt_winters:
-      trend: add
-      seasonal: add
-    prophet:
       changepoint_prior_scale: 0.1764971584817571
       seasonality_prior_scale: 0.04335281794951567
     random_forest:
-      n_estimators: 218
-      max_depth: 20
-      min_samples_split: 15
-      min_samples_leaf: 6
-      n_lags: 8
+      n_estimators: 65
+      max_depth: 19
+      min_samples_split: 6
+      min_samples_leaf: 7
+      n_lags: 24
     lightgbm:
-      n_estimators: 59
-      learning_rate: 0.2652261985899886
-      num_leaves: 216
-      min_child_samples: 25
-      n_lags: 9
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
     deepar:
-      hidden_size: 64
+      hidden_size: 32
       rnn_layers: 1
-      context_length: 9
+      context_length: 12
       batch_size: 64
     nhits:
       input_size: 12
       batch_size: 16
+    random_forest_direct:
+      n_estimators: 65
+      max_depth: 19
+      min_samples_split: 6
+      min_samples_leaf: 7
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
   structural__customer:
     arima:
       seasonal_period: 12
@@ -67,17 +50,152 @@ hpo_results:
       changepoint_prior_scale: 0.0026368755339723046
       seasonality_prior_scale: 0.029375384576328288
     random_forest:
-      n_estimators: 132
-      max_depth: 8
-      min_samples_split: 11
-      min_samples_leaf: 5
-      n_lags: 11
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 6
     lightgbm:
-      n_estimators: 348
-      learning_rate: 0.017915933593754683
-      num_leaves: 141
-      min_child_samples: 57
-      n_lags: 9
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    deepar:
+      hidden_size: 128
+      rnn_layers: 1
+      context_length: 7
+      batch_size: 32
+    nhits:
+      input_size: 12
+      batch_size: 16
+  structural__location:
+    arima:
+      seasonal_period: 12
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.1764971584817571
+      seasonality_prior_scale: 0.04335281794951567
+    random_forest:
+      n_estimators: 89
+      max_depth: 6
+      min_samples_split: 2
+      min_samples_leaf: 4
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 210
+      max_depth: 8
+      min_samples_split: 12
+      min_samples_leaf: 2
+      n_lags: 24
+    lightgbm:
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
+    deepar:
+      hidden_size: 16
+      rnn_layers: 1
+      context_length: 19
+      batch_size: 32
+    nhits:
+      input_size: 24
+      batch_size: 16
+  structural__CBF:
+    arima:
+      seasonal_period: 12
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.09454306819536169
+      seasonality_prior_scale: 0.6251373574521749
+    random_forest:
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 6
+    lightgbm:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 6
+    deepar:
+      hidden_size: 64
+      rnn_layers: 1
+      context_length: 9
+      batch_size: 64
+    nhits:
+      input_size: 24
+      batch_size: 16
+  structural__PH1:
+    arima:
+      seasonal_period: 12
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.1764971584817571
+      seasonality_prior_scale: 0.04335281794951567
+    random_forest:
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 6
+    lightgbm:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 24
     deepar:
       hidden_size: 64
       rnn_layers: 3
@@ -86,9 +204,9 @@ hpo_results:
     nhits:
       input_size: 12
       batch_size: 16
-  structural__location:
+  structural__PH2:
     arima:
-      seasonal_period: 6
+      seasonal_period: 12
     holt_winters:
       trend: add
       seasonal: add
@@ -96,24 +214,77 @@ hpo_results:
       changepoint_prior_scale: 0.1764971584817571
       seasonality_prior_scale: 0.04335281794951567
     random_forest:
-      n_estimators: 324
-      max_depth: 6
-      min_samples_split: 3
+      n_estimators: 210
+      max_depth: 8
+      min_samples_split: 12
+      min_samples_leaf: 2
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 6
+    lightgbm:
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    deepar:
+      hidden_size: 32
+      rnn_layers: 3
+      context_length: 7
+      batch_size: 64
+    nhits:
+      input_size: 12
+      batch_size: 16
+  structural__PH3:
+    arima:
+      seasonal_period: 12
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.1764971584817571
+      seasonality_prior_scale: 0.04335281794951567
+    random_forest:
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
       min_samples_leaf: 10
       n_lags: 24
     lightgbm:
-      n_estimators: 324
-      learning_rate: 0.0100505004670421
-      num_leaves: 31
-      min_child_samples: 96
+      n_estimators: 414
+      learning_rate: 0.017402809206301453
+      num_leaves: 39
+      min_child_samples: 70
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
       n_lags: 24
     deepar:
-      hidden_size: 128
-      rnn_layers: 1
+      hidden_size: 32
+      rnn_layers: 3
       context_length: 7
-      batch_size: 32
+      batch_size: 64
     nhits:
-      input_size: 24
+      input_size: 12
       batch_size: 16
   structural__total:
     arima:
@@ -122,25 +293,365 @@ hpo_results:
       trend: add
       seasonal: add
     prophet:
-      changepoint_prior_scale: 0.014648955132800727
-      seasonality_prior_scale: 0.07476312062252301
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
     random_forest:
-      n_estimators: 59
+      n_estimators: 133
       max_depth: 20
-      min_samples_split: 17
-      min_samples_leaf: 3
-      n_lags: 9
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
+    random_forest_direct:
+      n_estimators: 133
+      max_depth: 20
+      min_samples_split: 16
+      min_samples_leaf: 10
+      n_lags: 24
     lightgbm:
-      n_estimators: 325
-      learning_rate: 0.008851384099881301
-      num_leaves: 86
-      min_child_samples: 40
-      n_lags: 14
+      n_estimators: 132
+      learning_rate: 0.010594756088100142
+      num_leaves: 89
+      min_child_samples: 55
+      n_lags: 24
+    lightgbm_direct:
+      n_estimators: 218
+      learning_rate: 0.24517932047070642
+      num_leaves: 192
+      min_child_samples: 62
+      n_lags: 6
+    deepar:
+      hidden_size: 16
+      rnn_layers: 1
+      context_length: 24
+      batch_size: 32
+    nhits:
+      input_size: 24
+      batch_size: 16
+  temporal__quarter__base:
+    arima:
+      seasonal_period: 4
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    lightgbm:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 64
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 64
+    nhits:
+      input_size: 4
+      batch_size: 16
+  temporal__quarter__structural__customer:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 112
+      max_depth: 8
+      min_samples_split: 8
+      min_samples_leaf: 5
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 112
+      max_depth: 8
+      min_samples_split: 8
+      min_samples_leaf: 5
+      n_lags: 4
+    lightgbm:
+      n_estimators: 210
+      learning_rate: 0.015794797197594638
+      num_leaves: 146
+      min_child_samples: 18
+      n_lags: 12
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 32
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 32
+    nhits:
+      input_size: 4
+      batch_size: 16
+  temporal__quarter__structural__location:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    lightgbm:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
     deepar:
       hidden_size: 32
       rnn_layers: 3
-      context_length: 7
+      context_length: 4
       batch_size: 64
     nhits:
       input_size: 12
+      batch_size: 32
+  temporal__quarter__structural__CBF:
+    arima:
+      seasonal_period: 4
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.003095566460242371
+      seasonality_prior_scale: 0.03549878832196503
+    random_forest:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 112
+      max_depth: 8
+      min_samples_split: 8
+      min_samples_leaf: 5
+      n_lags: 4
+    lightgbm:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 16
+      rnn_layers: 1
+      context_length: 10
+      batch_size: 32
+    nhits:
+      input_size: 12
+      batch_size: 32
+  temporal__quarter__structural__PH1:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 112
+      max_depth: 8
+      min_samples_split: 8
+      min_samples_leaf: 5
+      n_lags: 4
+    lightgbm:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 64
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 64
+    nhits:
+      input_size: 4
+      batch_size: 16
+  temporal__quarter__structural__PH2:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 218
+      max_depth: 20
+      min_samples_split: 15
+      min_samples_leaf: 6
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 112
+      max_depth: 8
+      min_samples_split: 8
+      min_samples_leaf: 5
+      n_lags: 4
+    lightgbm:
+      n_estimators: 218
+      learning_rate: 0.24517932047070642
+      num_leaves: 192
+      min_child_samples: 62
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 64
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 64
+    nhits:
+      input_size: 4
+      batch_size: 16
+  temporal__quarter__structural__PH3:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    lightgbm:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 440
+      learning_rate: 0.05859268690985102
+      num_leaves: 186
+      min_child_samples: 6
+      n_lags: 4
+    deepar:
+      hidden_size: 32
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 32
+    nhits:
+      input_size: 4
+      batch_size: 16
+  temporal__quarter__structural__total:
+    arima:
+      seasonal_period: 2
+    holt_winters:
+      trend: add
+      seasonal: add
+    prophet:
+      changepoint_prior_scale: 0.0026368755339723046
+      seasonality_prior_scale: 0.029375384576328288
+    random_forest:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    random_forest_direct:
+      n_estimators: 440
+      max_depth: 13
+      min_samples_split: 15
+      min_samples_leaf: 1
+      n_lags: 4
+    lightgbm:
+      n_estimators: 218
+      learning_rate: 0.24517932047070642
+      num_leaves: 192
+      min_child_samples: 62
+      n_lags: 4
+    lightgbm_direct:
+      n_estimators: 218
+      learning_rate: 0.24517932047070642
+      num_leaves: 192
+      min_child_samples: 62
+      n_lags: 4
+    deepar:
+      hidden_size: 32
+      rnn_layers: 1
+      context_length: 5
+      batch_size: 32
+    nhits:
+      input_size: 4
       batch_size: 16
