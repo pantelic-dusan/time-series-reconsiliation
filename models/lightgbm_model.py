@@ -136,3 +136,31 @@ class LightGBMModel(ForecastModel):
             }))
 
         return pd.concat(all_forecasts, ignore_index=True)
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """One-step in-sample predictions from the loaded model on the lag matrix. """
+        target_column = config["data"]["target_col"]
+        time_column = config["data"]["time_col"]
+        model = self._models.get(0)
+        if model is None:
+            raise RuntimeError("LightGBM.in_sample_fitted called before fit/load")
+
+        records: list[pd.DataFrame] = []
+        feature_cols = all_feature_names(self._n_lags)
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column).reset_index(drop=True)
+            values = group[target_column].values.astype(float)
+            dates = pd.DatetimeIndex(pd.to_datetime(group[time_column]))
+            n = len(values)
+            fitted = values.astype(float).copy()
+            if n > self._n_lags:
+                X = build_feature_matrix(values, dates, self._n_lags)[:-1]
+                X_df = pd.DataFrame(X, columns=feature_cols)
+                preds = model.predict(X_df)
+                fitted[self._n_lags : self._n_lags + len(preds)] = preds
+            records.append(pd.DataFrame({
+                "ts_id": ts_id,
+                "date": dates.values,
+                "fitted": fitted,
+            }))
+        return pd.concat(records, ignore_index=True)

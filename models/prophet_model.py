@@ -97,3 +97,38 @@ class ProphetModel(ForecastModel):
         self._model = self._fitted_models
         return self
 
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """In-sample fitted values from ``model.predict(model.history[['ds']])``.
+
+        Prophet has no `fittedvalues`; the canonical pattern is to predict on
+        the training timestamps stored in ``model.history`` (set during fit).
+        """
+        time_column = config["data"]["time_col"]
+        target_column = config["data"]["target_col"]
+
+        actuals_lookup: Dict[str, pd.DataFrame] = {
+            ts_id: g.sort_values(time_column).copy()
+            for ts_id, g in dataframe.groupby("ts_id")
+        }
+
+        records: list[pd.DataFrame] = []
+        for ts_id, fitted_model in self._fitted_models.items():
+            actual_df = actuals_lookup.get(ts_id)
+            if actual_df is None:
+                continue
+            history = fitted_model.history[["ds"]].copy()
+            in_sample = fitted_model.predict(history)[["ds", "yhat"]]
+            in_sample["ds"] = pd.to_datetime(in_sample["ds"])
+            actual_df = actual_df.rename(columns={time_column: "ds"})
+            actual_df["ds"] = pd.to_datetime(actual_df["ds"])
+            merged = actual_df.merge(in_sample, on="ds", how="inner")
+            records.append(pd.DataFrame({
+                "ts_id": ts_id,
+                "date": merged["ds"].values,
+                "fitted": merged["yhat"].values.astype(float),
+            }))
+
+        if not records:
+            return pd.DataFrame(columns=["ts_id", "date", "fitted"])
+        return pd.concat(records, ignore_index=True)
+

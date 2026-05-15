@@ -345,4 +345,23 @@ storage:
   forecasts_dir: "outputs/forecasts"
   evaluations_dir: "outputs/evaluations"
   checkpoint_dir: "outputs/checkpoints"
+  residuals_dir: "outputs/residuals"
+
+reconciliation:
+  # Methods applied on top of original per-level forecasts. Each method writes
+  # an additional file `<level>/<model>__<method>_forecasts.csv` next to the
+  # originals, which `evaluate.py` then scores alongside the unreconciled
+  # baseline (reconciliation_method = "none").
+  nonnegative: true   # enforce non-negative reconciled forecasts via constrained QP
+  enabled_methods:
+    - "OLS"          # ordinary least squares (Hyndman 2011)
+    - "WLS_struct"   # weighted least squares, structural scaling
+    - "WLS_var"      # weighted least squares, variance scaling (uses residuals)
+    - "MinT_shrink"  # MinT with shrinkage covariance (uses residuals)
+  enabled_modes:
+    - "cross_structural"             # struct + base, single global S (Nixtla)
+    - "cross_temporal"              # monthly <-> quarterly per structural level (manual)
+    - "cross_temporal_structural"   # combined S over (level x frequency) (manual, experimental)
+  # Suffix convention for reconciled forecast files inside each level dir.
+  filename_suffix_separator: "__"
 

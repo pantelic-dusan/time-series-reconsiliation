@@ -68,3 +68,29 @@ def write_hpo_results(
     with open(path, "w", encoding="utf-8") as f:
         yaml.dump(payload, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
     return path
+
+
+def resolve_model_params(
+    model_config: Dict[str, Any],
+    param_overrides: Dict[str, Dict[str, Any]] | None,
+) -> Dict[str, Any]:
+    """Merge default ``model_config['params']`` with HPO overrides.
+
+    Mirrors the merge logic in ``train.run_level`` so that other entry points
+    (e.g. ``reconcile.py``) load checkpoints with the exact parameter set used
+    during training. ``param_overrides`` is the per-level dict from
+    ``load_hpo_results()`` (``{model_name: {param: value, ...}}``).
+    """
+    model_name = model_config["name"]
+    model_params = dict(model_config.get("params", {}))
+    if not param_overrides:
+        return model_params
+
+    inherit_key = model_config.get("hpo_inherit_from")
+    override_source = inherit_key if inherit_key else model_name
+    overrides = dict(param_overrides.get(override_source, {}))
+    if inherit_key:
+        overrides.pop("strategy", None)
+    if overrides:
+        model_params = {**model_params, **overrides}
+    return model_params

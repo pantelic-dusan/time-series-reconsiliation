@@ -64,3 +64,30 @@ class HoltWintersModel(ForecastModel):
             }))
 
         return pd.concat(all_forecasts, ignore_index=True)
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """One-step in-sample fitted values from ``results.fittedvalues``."""
+        time_column = config["data"]["time_col"]
+        target_column = config["data"]["target_col"]
+
+        records: list[pd.DataFrame] = []
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column)
+            actual = group[target_column].values.astype(float)
+            dates = pd.to_datetime(group[time_column].values)
+
+            fitted_model = self._fitted_models.get(ts_id)
+            if fitted_model is None:
+                fitted = actual.copy()
+            else:
+                fitted = np.asarray(fitted_model.fittedvalues, dtype=float)
+                if fitted.shape[0] != actual.shape[0] or not np.isfinite(fitted).all():
+                    fitted = np.where(np.isfinite(fitted), fitted, actual)
+
+            records.append(pd.DataFrame({
+                "ts_id": ts_id,
+                "date": dates,
+                "fitted": fitted,
+            }))
+
+        return pd.concat(records, ignore_index=True)

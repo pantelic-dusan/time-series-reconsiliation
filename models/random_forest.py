@@ -132,3 +132,38 @@ class RandomForestModel(ForecastModel):
             }))
 
         return pd.concat(all_forecasts, ignore_index=True)
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """One-step in-sample predictions from the loaded model on the lag matrix.
+
+        For both ``recursive`` and ``direct`` strategies, ``self._models[0]`` is
+        the 1-step-ahead model, which is the appropriate source of one-step
+        in-sample fitted values. The first ``n_lags`` timestamps per series have
+        no history and we set ``fitted = actual`` for them (residual = 0) to
+        keep the per-series sample length aligned with the actuals.
+        """
+        target_column = config["data"]["target_col"]
+        time_column = config["data"]["time_col"]
+        model = self._models.get(0)
+        if model is None:
+            raise RuntimeError("RandomForest.in_sample_fitted called before fit/load")
+
+        records: list[pd.DataFrame] = []
+        feature_cols = all_feature_names(self._n_lags)
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column).reset_index(drop=True)
+            values = group[target_column].values.astype(float)
+            dates = pd.DatetimeIndex(pd.to_datetime(group[time_column]))
+            n = len(values)
+            fitted = values.astype(float).copy()  # default to actual (residual = 0)
+            if n > self._n_lags:
+                X = build_feature_matrix(values, dates, self._n_lags)[:-1]
+                X_df = pd.DataFrame(X, columns=feature_cols)
+                preds = model.predict(X_df)
+                fitted[self._n_lags : self._n_lags + len(preds)] = preds
+            records.append(pd.DataFrame({
+                "ts_id": ts_id,
+                "date": dates.values,
+                "fitted": fitted,
+            }))
+        return pd.concat(records, ignore_index=True)

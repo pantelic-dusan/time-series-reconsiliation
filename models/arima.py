@@ -133,3 +133,41 @@ class ARIMAModel(ForecastModel):
             )
 
         return pd.concat(all_forecasts, ignore_index=True)
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """One-step in-sample predictions via ``pmdarima.ARIMA.predict_in_sample``.
+
+        For series whose ``predict_in_sample`` raises (degenerate orders), we
+        fall back to the actual value (residual = 0) for that series so that
+        downstream covariance estimation is not skewed by NaNs.
+        """
+        time_column = config["data"]["time_col"]
+        target_column = config["data"]["target_col"]
+
+        records: list[pd.DataFrame] = []
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column)
+            actual = group[target_column].values.astype(float)
+            dates = pd.to_datetime(group[time_column].values)
+
+            fitted_model = self._fitted_models.get(ts_id)
+            if fitted_model is None:
+                fitted = actual.copy()
+            else:
+                try:
+                    fitted = np.asarray(
+                        fitted_model.predict_in_sample(start=0, end=len(actual) - 1)
+                    )
+                    if fitted.shape[0] != actual.shape[0] or not np.isfinite(fitted).all():
+                        raise ValueError("invalid in-sample output")
+                except Exception as exc:
+                    logger.debug(f"ARIMA[{ts_id}]: in-sample fallback ({exc!r})")
+                    fitted = actual.copy()
+
+            records.append(pd.DataFrame({
+                "ts_id": ts_id,
+                "date": dates,
+                "fitted": fitted,
+            }))
+
+        return pd.concat(records, ignore_index=True)

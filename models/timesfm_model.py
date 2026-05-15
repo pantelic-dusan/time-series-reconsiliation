@@ -122,3 +122,63 @@ class TimesFMModel(ForecastModel):
         self._load_model()
         self._model = self._tfm
         return self
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """Walk-forward 1-step in-sample predictions using the loaded zero-shot pipeline.
+
+        Trailing window length is bounded by
+        ``config['reconciliation']['insample_max_window']`` (default: full
+        training period).
+        """
+        target_column = config["data"]["target_col"]
+        time_column = config["data"]["time_col"]
+        context_length = self.params.get("context_length", 128)
+        max_window = (config.get("reconciliation") or {}).get("insample_max_window")
+
+        per_series: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column)
+            values = group[target_column].values.astype(float)
+            dates = pd.to_datetime(group[time_column].values)
+            per_series[ts_id] = (values, dates)
+
+        ts_ids = list(per_series.keys())
+        max_T = max(len(v) for v, _ in per_series.values())
+        start_t = 1
+        end_t = max_T
+        if max_window is not None:
+            start_t = max(start_t, max_T - int(max_window))
+
+        fitted_per_series: dict[str, np.ndarray] = {
+            tid: per_series[tid][0].astype(float).copy() for tid in ts_ids
+        }
+
+        # TimesFM frequency input: 0 = high-frequency (monthly/weekly/daily). Match predict().
+        for t in range(start_t, end_t):
+            batch_ids: list[str] = []
+            batch_contexts: list[list[float]] = []
+            for tid in ts_ids:
+                values, _ = per_series[tid]
+                if t > len(values) - 1:
+                    continue
+                ctx_start = max(0, t - context_length)
+                ctx = values[ctx_start:t]
+                if len(ctx) == 0:
+                    continue
+                batch_ids.append(tid)
+                batch_contexts.append(ctx.tolist())
+            if not batch_contexts:
+                continue
+            preds, _ = self._tfm.forecast(batch_contexts, freq=[0] * len(batch_contexts))
+            for i, tid in enumerate(batch_ids):
+                fitted_per_series[tid][t] = float(preds[i, 0])
+
+        records: list[pd.DataFrame] = []
+        for tid in ts_ids:
+            values, dates = per_series[tid]
+            records.append(pd.DataFrame({
+                "ts_id": tid,
+                "date": dates,
+                "fitted": fitted_per_series[tid],
+            }))
+        return pd.concat(records, ignore_index=True)

@@ -62,3 +62,28 @@ class NHITSModel(ForecastModel):
         self._nf = NeuralForecast.load(path=str(path))
         self._model = self._nf
         return self
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """One-step in-sample fitted values via ``NeuralForecast.predict_insample``.
+
+        ``predict_insample(step_size=1)`` produces rolling-window predictions for
+        the full horizon at every cutoff. We keep only the one-step-ahead row
+        (smallest ``ds - cutoff``) per ``(unique_id, ds)``.
+        """
+        time_column = config["data"]["time_col"]
+        if self._nf is None:
+            raise RuntimeError("NHITS.in_sample_fitted called before fit/load")
+
+        in_sample = self._nf.predict_insample(step_size=1).reset_index(drop=False)
+        in_sample["ds"] = pd.to_datetime(in_sample["ds"])
+        in_sample["cutoff"] = pd.to_datetime(in_sample["cutoff"])
+        in_sample["__step"] = (in_sample["ds"] - in_sample["cutoff"]).dt.days
+        # Keep the most recent forecast (smallest step) per (unique_id, ds).
+        idx = in_sample.groupby(["unique_id", "ds"], sort=False)["__step"].idxmin()
+        one_step = in_sample.loc[idx, ["unique_id", "ds", "NHITS"]]
+
+        return pd.DataFrame({
+            "ts_id": one_step["unique_id"].values,
+            "date": one_step["ds"].values,
+            "fitted": one_step["NHITS"].astype(float).values,
+        })

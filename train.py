@@ -9,7 +9,7 @@ from typing import Any, Dict
 import pandas as pd
 
 from utils.aggregation_utils import iter_levels
-from utils.utils import load_config, load_hpo_results, load_raw_data
+from utils.utils import load_config, load_hpo_results, load_raw_data, resolve_model_params
 from utils.logging_utils import setup_logging, timed
 from models import MODEL_REGISTRY
 
@@ -107,7 +107,7 @@ def run_level(
     for model_config in config["models"]:
         model_name = model_config["name"]
         model_type = model_config.get("type", model_name)
-        model_params = dict(model_config.get("params", {}))
+        model_params = resolve_model_params(model_config, param_overrides)
 
         if param_overrides:
             inherit_key = model_config.get("hpo_inherit_from")
@@ -116,7 +116,6 @@ def run_level(
             if inherit_key:
                 overrides.pop("strategy", None)
             if overrides:
-                model_params = {**model_params, **overrides}
                 src_label = f" (inherited from '{inherit_key}')" if inherit_key else ""
                 logger.info(f"  [{model_name}] applying HPO params{src_label}: {overrides}")
 

@@ -53,12 +53,17 @@ def evaluate_level(
 
     summary_rows: List[Dict[str, Any]] = []
 
-    for model_config in level_config["models"]:
-        model_name = model_config["name"]
-        forecast_path = level_forecasts_dir / f"{model_name}_forecasts.csv"
-        if not forecast_path.exists():
-            logger.warning(f"{level_label}/{model_name}: no forecast file, skipping.")
-            continue
+    # Collect all *_forecasts.csv files present — includes reconciled outputs
+    # written by reconcile.py (e.g. arima__MinT_shrink_forecasts.csv).
+    all_forecast_paths = sorted(level_forecasts_dir.glob("*_forecasts.csv"))
+    if not all_forecast_paths:
+        logger.warning(f"{level_label}: no forecast files found in {level_forecasts_dir}.")
+        return []
+
+    for forecast_path in all_forecast_paths:
+        # Derive model_name from filename: strip trailing "_forecasts.csv".
+        stem = forecast_path.stem                   # e.g. "arima" or "arima__OLS"
+        model_name = stem[: -len("_forecasts")]     # strip "_forecasts" suffix
 
         with timed(f"eval {level_label}/{model_name}", logger):
             forecast_dataframe = pd.read_csv(forecast_path)

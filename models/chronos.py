@@ -177,3 +177,98 @@ class ChronosModel(ForecastModel):
         self._load_pipeline()
         self._model = self._pipeline
         return self
+
+    def _predict_one_step_batch(self, contexts: list) -> np.ndarray:
+        """Batched 1-step-ahead prediction for a list of context arrays."""
+        context_tensors = [torch.tensor(c, dtype=torch.float32) for c in contexts]
+        with torch.no_grad():
+            if self._kind == "chronos2":
+                quantile_levels = [0.5]
+                quantile_forecasts, _ = self._pipeline.predict_quantiles(
+                    inputs=context_tensors,
+                    prediction_length=1,
+                    quantile_levels=quantile_levels,
+                )
+                return np.array([q.squeeze(0)[0, 0].cpu().item() for q in quantile_forecasts])
+            elif self._kind == "bolt":
+                forecast_samples = self._pipeline.predict(
+                    inputs=context_tensors, prediction_length=1
+                )
+                quantiles = getattr(self._pipeline, "quantiles", None)
+                if quantiles is not None and 0.5 in list(quantiles):
+                    median_index = list(quantiles).index(0.5)
+                else:
+                    median_index = forecast_samples.shape[1] // 2
+                return forecast_samples[:, median_index, 0].cpu().numpy()
+            else:
+                forecast_samples = self._pipeline.predict(
+                    inputs=context_tensors, prediction_length=1
+                )
+                return forecast_samples.median(dim=1).values[:, 0].cpu().numpy()
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """Walk-forward 1-step in-sample predictions using the loaded zero-shot pipeline.
+
+        For each timestep ``t`` in the trailing window, every series's
+        ``series[max(0, t - context_length):t]`` is used as context and the
+        pipeline predicts ``series_hat[t]``. Trailing window length is bounded
+        by ``config['reconciliation']['insample_max_window']`` (default: full
+        training period).
+        """
+        target_column = config["data"]["target_col"]
+        time_column = config["data"]["time_col"]
+        context_length = self.params.get("context_length", 128)
+        max_window = (config.get("reconciliation") or {}).get("insample_max_window")
+
+        per_series: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column)
+            values = group[target_column].values.astype(float)
+            dates = pd.to_datetime(group[time_column].values)
+            per_series[ts_id] = (values, dates)
+
+        ts_ids = list(per_series.keys())
+        max_T = max(len(v) for v, _ in per_series.values())
+
+        # Determine the timestep range to walk over (1-step-ahead requires t >= 1
+        # so context is non-empty; we further require t >= 1 for any prediction).
+        start_t = 1
+        end_t = max_T
+        if max_window is not None:
+            start_t = max(start_t, max_T - int(max_window))
+
+        # Initialize fitted = actual (so first start_t timesteps have residual = 0).
+        fitted_per_series: dict[str, np.ndarray] = {
+            tid: per_series[tid][0].astype(float).copy() for tid in ts_ids
+        }
+
+        for t in range(start_t, end_t):
+            batch_ids: list[str] = []
+            batch_contexts: list[np.ndarray] = []
+            for tid in ts_ids:
+                values, _ = per_series[tid]
+                if t > len(values) - 1:
+                    continue  # series shorter than t; nothing to fit at this step
+                ctx_start = max(0, t - context_length)
+                ctx = values[ctx_start:t]
+                if len(ctx) == 0:
+                    continue
+                batch_ids.append(tid)
+                batch_contexts.append(ctx)
+
+            if not batch_contexts:
+                continue
+
+            preds = self._predict_one_step_batch(batch_contexts)
+            for tid, pred in zip(batch_ids, preds):
+                fitted_per_series[tid][t] = float(pred)
+
+        records: list[pd.DataFrame] = []
+        for tid in ts_ids:
+            values, dates = per_series[tid]
+            records.append(pd.DataFrame({
+                "ts_id": tid,
+                "date": dates,
+                "fitted": fitted_per_series[tid],
+            }))
+        return pd.concat(records, ignore_index=True)

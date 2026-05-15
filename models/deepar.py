@@ -4,6 +4,7 @@ from typing import Any, Dict
 import json
 
 import pandas as pd
+import numpy as np
 
 import torch
 from gluonts.dataset.pandas import PandasDataset
@@ -129,4 +130,77 @@ class DeepARModel(ForecastModel):
             self._period_freq = meta.get("period_freq")
         self._model = self._predictor
         return self
+
+    def in_sample_fitted(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+        """Walk-forward 1-step in-sample predictions using the trained DeepAR predictor.
+
+        For each cutoff ``t`` in the trailing window, we build a PandasDataset
+        from each series's history ``series[:t]`` and call
+        ``predictor.predict(prediction_length=1)``. Trailing window length is
+        bounded by ``config['reconciliation']['insample_max_window']``.
+        """
+        target_column = config["data"]["target_col"]
+        time_column = config["data"]["time_col"]
+        max_window = (config.get("reconciliation") or {}).get("insample_max_window")
+        context_length = self.params.get("context_length", 12)
+
+        per_series: dict[str, pd.DataFrame] = {}
+        for ts_id, group in dataframe.groupby("ts_id"):
+            group = group.sort_values(time_column).copy()
+            group[time_column] = pd.to_datetime(group[time_column])
+            per_series[ts_id] = group
+
+        ts_ids = list(per_series.keys())
+        max_T = max(len(g) for g in per_series.values())
+        start_t = max(context_length + 1, 1)
+        end_t = max_T
+        if max_window is not None:
+            start_t = max(start_t, max_T - int(max_window))
+
+        fitted_per_series: dict[str, np.ndarray] = {
+            tid: per_series[tid][target_column].values.astype(float).copy()
+            for tid in ts_ids
+        }
+
+        for t in range(start_t, end_t):
+            slices: list[pd.DataFrame] = []
+            order: list[str] = []
+            for tid in ts_ids:
+                g = per_series[tid]
+                if t > len(g) - 1:
+                    continue
+                # Use only the trailing context window per series for efficiency.
+                ctx_start = max(0, t - context_length)
+                sub = g.iloc[ctx_start:t][[time_column, target_column, "ts_id"]].copy()
+                if len(sub) < 2:
+                    continue
+                slices.append(sub)
+                order.append(tid)
+
+            if not slices:
+                continue
+
+            batch_df = pd.concat(slices, ignore_index=True).set_index(time_column)
+            ds = PandasDataset.from_long_dataframe(
+                batch_df,
+                item_id="ts_id",
+                target=target_column,
+                freq=self._period_freq,
+            )
+            # Build a 1-step predictor on the fly to avoid mutating self._predictor.
+            forecasts = list(self._predictor.predict(ds))
+            for fc in forecasts:
+                tid = fc.item_id
+                if tid in fitted_per_series:
+                    fitted_per_series[tid][t] = float(np.asarray(fc.mean)[0])
+
+        records: list[pd.DataFrame] = []
+        for tid in ts_ids:
+            g = per_series[tid]
+            records.append(pd.DataFrame({
+                "ts_id": tid,
+                "date": g[time_column].values,
+                "fitted": fitted_per_series[tid],
+            }))
+        return pd.concat(records, ignore_index=True)
 
