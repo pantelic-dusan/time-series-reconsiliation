@@ -357,11 +357,14 @@ reconciliation:
     - "OLS"          # ordinary least squares (Hyndman 2011)
     - "WLS_struct"   # weighted least squares, structural scaling
     - "WLS_var"      # weighted least squares, variance scaling (uses residuals)
-    - "MinT_shrink"  # MinT with shrinkage covariance (uses residuals)
+    - "MinT_shrink"  # MinT with Schäfer-Strimmer shrinkage covariance (uses residuals)
+    - "MinT_cov"     # MinT with full sample covariance (uses residuals)
+    - "EMinT"        # Empirical MinT (uses residuals)
   enabled_modes:
-    - "cross_structural"             # struct + base, single global S (Nixtla)
-    - "cross_temporal"              # monthly <-> quarterly per structural level (manual)
-    - "cross_temporal_structural"   # combined S over (level x frequency) (manual, experimental)
+    - "cross_structural_monthly"      # struct + base at monthly frequency
+    - "cross_structural_quarterly"    # struct + base at quarterly frequency
+    - "cross_temporal"                # monthly <-> quarterly per ts_id (library MinTrace; all 6 methods)
+    - "cross_temporal_structural"     # joint (level x frequency) (library MinTrace; all 6 methods)
   # Suffix convention for reconciled forecast files inside each level dir.
   filename_suffix_separator: "__"
 
