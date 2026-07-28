@@ -10,6 +10,35 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
+def resolve_torch_device(value: str | None) -> str:
+    """Resolve a config ``device`` string to a concrete torch device.
+
+    Accepts ``"auto"``, ``"cuda"``, ``"gpu"``, or ``"cpu"`` (case-insensitive).
+    - ``"auto"`` → ``"cuda"`` if CUDA is available, else ``"cpu"``.
+    - ``"cuda"`` / ``"gpu"`` → ``"cuda"`` if available, else falls back to
+      ``"cpu"`` with a warning.
+    - ``"cpu"`` or anything else → ``"cpu"``.
+    """
+    requested = (value or "auto").lower()
+    try:
+        import torch
+
+        cuda_available = bool(torch.cuda.is_available())
+    except Exception:
+        cuda_available = False
+
+    if requested == "auto":
+        return "cuda" if cuda_available else "cpu"
+    if requested in ("cuda", "gpu"):
+        if cuda_available:
+            return "cuda"
+        logger.warning(
+            f"device='{value}' requested but CUDA is not available; falling back to CPU."
+        )
+        return "cpu"
+    return "cpu"
+
+
 def load_config(path: str) -> Dict[str, Any]:
     """Parse a YAML config file."""
     with open(path, "r") as f:

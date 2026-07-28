@@ -71,10 +71,62 @@ class NHITSModel(ForecastModel):
         (smallest ``ds - cutoff``) per ``(unique_id, ds)``.
         """
         time_column = config["data"]["time_col"]
+        target_column = config["data"]["target_col"]
         if self._nf is None:
             raise RuntimeError("NHITS.in_sample_fitted called before fit/load")
 
-        in_sample = self._nf.predict_insample(step_size=1).reset_index(drop=False)
+        nf_df = dataframe[["ts_id", time_column, target_column]].copy()
+        nf_df.columns = ["unique_id", "ds", "y"]
+        nf_df["ds"] = pd.to_datetime(nf_df["ds"])
+
+        # Only series long enough to produce at least one window can be scored.
+        horizon = int(getattr(self._nf, "h", config["experiment"]["horizon"]))
+        lengths = nf_df.groupby("unique_id", sort=False).size()
+        eligible_ids = lengths[lengths > horizon].index
+        nf_df = nf_df[nf_df["unique_id"].isin(eligible_ids)]
+        if nf_df.empty:
+            return pd.DataFrame(columns=["ts_id", "date", "fitted"])
+
+        # Save and restore the NeuralForecast internal dataset state.
+        saved_state = (
+            self._nf.dataset,
+            self._nf.uids,
+            self._nf.last_dates,
+            self._nf.ds,
+        )
+
+        per_group_results: list[pd.DataFrame] = []
+        try:
+            length_per_id = nf_df.groupby("unique_id", sort=False).size()
+            for length, ids_at_length in length_per_id.groupby(length_per_id):
+                group_ids = ids_at_length.index
+                group_df = nf_df[nf_df["unique_id"].isin(group_ids)]
+                # Reuse fitted scalers (predict_only=True) so we don't refit them.
+                (
+                    self._nf.dataset,
+                    self._nf.uids,
+                    self._nf.last_dates,
+                    self._nf.ds,
+                ) = self._nf._prepare_fit(
+                    df=group_df,
+                    static_df=None,
+                    sort_df=True,
+                    predict_only=True,
+                    id_col="unique_id",
+                    time_col="ds",
+                    target_col="y",
+                )
+                in_sample = self._nf.predict_insample(step_size=1).reset_index(drop=False)
+                per_group_results.append(in_sample)
+        finally:
+            (
+                self._nf.dataset,
+                self._nf.uids,
+                self._nf.last_dates,
+                self._nf.ds,
+            ) = saved_state
+
+        in_sample = pd.concat(per_group_results, ignore_index=True)
         in_sample["ds"] = pd.to_datetime(in_sample["ds"])
         in_sample["cutoff"] = pd.to_datetime(in_sample["cutoff"])
         in_sample["__step"] = (in_sample["ds"] - in_sample["cutoff"]).dt.days

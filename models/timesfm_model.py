@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
 from typing import Any, Dict
+import logging
+import time
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from models.model_interface import ForecastModel
@@ -10,6 +13,8 @@ from models.model_interface import ForecastModel
 # Enforce offline mode
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
+logger = logging.getLogger(__name__)
 
 
 class TimesFMModel(ForecastModel):
@@ -24,6 +29,12 @@ class TimesFMModel(ForecastModel):
         self._freq: str | None = None
         self._series_contexts: Dict[str, tuple] = {}
         self._model_path: str = self.params.get("model_path", "google/timesfm-1.0-200m-pytorch")
+        # ``device`` accepts "auto", "cuda"/"gpu", or "cpu". "auto" picks CUDA
+        # if available else CPU. TimesFM hparams use ``backend`` with values
+        # {"cpu", "gpu", "tpu"}, so we map cuda -> gpu here.
+        from utils.utils import resolve_torch_device
+        device = resolve_torch_device(self.params.get("device", "auto"))
+        self._backend: str = "gpu" if device == "cuda" else "cpu"
 
     def _load_model(self):
         """Load TimesFM from local HuggingFace cache using the updated API.
@@ -42,7 +53,7 @@ class TimesFMModel(ForecastModel):
 
         if is_v2:
             hparams = timesfm.TimesFmHparams(
-                backend="cpu",
+                backend=self._backend,
                 per_core_batch_size=per_core_batch_size,
                 horizon_len=128,
                 num_layers=50,
@@ -53,7 +64,7 @@ class TimesFMModel(ForecastModel):
             )
         else:
             hparams = timesfm.TimesFmHparams(
-                backend="cpu",
+                backend=self._backend,
                 per_core_batch_size=per_core_batch_size,
                 horizon_len=128,
             )
@@ -134,6 +145,9 @@ class TimesFMModel(ForecastModel):
         time_column = config["data"]["time_col"]
         context_length = self.params.get("context_length", 128)
         max_window = (config.get("reconciliation") or {}).get("insample_max_window")
+        # Mini-batch size for the per-timestep ``forecast()`` call. Bounds peak
+        # memory and gives interruptible progress. Configurable via model params.
+        batch_size = int(self.params.get("insample_batch_size", 256))
 
         per_series: dict[str, tuple[np.ndarray, np.ndarray]] = {}
         for ts_id, group in dataframe.groupby("ts_id"):
@@ -150,11 +164,18 @@ class TimesFMModel(ForecastModel):
             start_t = max(start_t, max_T - int(max_window))
 
         fitted_per_series: dict[str, np.ndarray] = {
-            tid: per_series[tid][0].astype(float).copy() for tid in ts_ids
+            tid: np.full(len(per_series[tid][0]), np.nan) for tid in ts_ids
         }
 
+        n_steps = end_t - start_t
+        logger.info(
+            f"  timesfm in_sample_fitted: {len(ts_ids)} series, walking "
+            f"t={start_t}..{end_t} ({n_steps} steps), batch_size={batch_size}"
+        )
+        run_start = time.time()
+
         # TimesFM frequency input: 0 = high-frequency (monthly/weekly/daily). Match predict().
-        for t in range(start_t, end_t):
+        for step_idx, t in enumerate(range(start_t, end_t)):
             batch_ids: list[str] = []
             batch_contexts: list[list[float]] = []
             for tid in ts_ids:
@@ -169,9 +190,25 @@ class TimesFMModel(ForecastModel):
                 batch_contexts.append(ctx.tolist())
             if not batch_contexts:
                 continue
-            preds, _ = self._tfm.forecast(batch_contexts, freq=[0] * len(batch_contexts))
-            for i, tid in enumerate(batch_ids):
-                fitted_per_series[tid][t] = float(preds[i, 0])
+
+            # Chunk into mini-batches so each forecast() call is bounded.
+            for start in range(0, len(batch_contexts), batch_size):
+                chunk_ids = batch_ids[start : start + batch_size]
+                chunk_contexts = batch_contexts[start : start + batch_size]
+                preds, _ = self._tfm.forecast(
+                    chunk_contexts, freq=[0] * len(chunk_contexts)
+                )
+                for i, tid in enumerate(chunk_ids):
+                    fitted_per_series[tid][t] = float(preds[i, 0])
+
+            elapsed = time.time() - run_start
+            done = step_idx + 1
+            eta = (elapsed / done) * (n_steps - done) if done > 0 else 0.0
+            logger.info(
+                f"  timesfm in_sample_fitted: t={t} "
+                f"({done}/{n_steps}, {len(batch_contexts)} ctx) "
+                f"elapsed={elapsed:.0f}s eta={eta:.0f}s"
+            )
 
         records: list[pd.DataFrame] = []
         for tid in ts_ids:

@@ -328,7 +328,7 @@ models:
   - name: "chronos"
     params:
       model_path: "amazon/chronos-2"  # Chronos-2 (Oct 2025) — newest, uses Chronos2Pipeline
-      device: "cpu"
+      device: "auto"  # cuda if available, else cpu fallback
       context_length: 128
     hpo:
       enabled: false  # Zero-shot pretrained; no trainable hyperparameters
@@ -336,6 +336,7 @@ models:
   - name: "timesfm"
     params:
       model_path: "google/timesfm-2.0-500m-pytorch"  # TimesFM 2.0 — 500M, 50 layers, 1280 dims
+      device: "auto"  # cuda if available, else cpu fallback
       context_length: 256
     hpo:
       enabled: false  # Zero-shot pretrained; no trainable hyperparameters
@@ -354,17 +355,16 @@ reconciliation:
   # baseline (reconciliation_method = "none").
   nonnegative: true   # enforce non-negative reconciled forecasts via constrained QP
   enabled_methods:
-    - "OLS"          # ordinary least squares (Hyndman 2011)
-    - "WLS_struct"   # weighted least squares, structural scaling
-    - "WLS_var"      # weighted least squares, variance scaling (uses residuals)
-    - "MinT_shrink"  # MinT with Schäfer-Strimmer shrinkage covariance (uses residuals)
-    - "MinT_cov"     # MinT with full sample covariance (uses residuals)
-    - "EMinT"        # Empirical MinT (uses residuals)
+     - "OLS"          # ordinary least squares (Hyndman 2011)
+     - "WLS_struct"   # weighted least squares, structural scaling
+     - "WLS_var"      # weighted least squares, variance scaling (uses residuals)
+     - "MinT_shrink"  # MinT with Schäfer-Strimmer shrinkage covariance (uses residuals)
+    # MinT_cov and EMinT removed: full sample covariance is 20000x20000 from ~60 obs → rank-deficient → singular
   enabled_modes:
     - "cross_structural_monthly"      # struct + base at monthly frequency
-    - "cross_structural_quarterly"    # struct + base at quarterly frequency
+    #- "cross_structural_quarterly"    # struct + base at quarterly frequency
     - "cross_temporal"                # monthly <-> quarterly per ts_id (library MinTrace; all 6 methods)
-    - "cross_temporal_structural"     # joint (level x frequency) (library MinTrace; all 6 methods)
+    # cross_temporal_structural disabled: joint S matrix is ~170k×120k (~163 GB dense); infeasible at this scale
   # Suffix convention for reconciled forecast files inside each level dir.
   filename_suffix_separator: "__"
 

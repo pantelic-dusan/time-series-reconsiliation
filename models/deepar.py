@@ -152,13 +152,13 @@ class DeepARModel(ForecastModel):
 
         ts_ids = list(per_series.keys())
         max_T = max(len(g) for g in per_series.values())
-        start_t = max(context_length + 1, 1)
+        start_t = max(context_length, 1)
         end_t = max_T
         if max_window is not None:
             start_t = max(start_t, max_T - int(max_window))
 
         fitted_per_series: dict[str, np.ndarray] = {
-            tid: per_series[tid][target_column].values.astype(float).copy()
+            tid: np.full(len(per_series[tid]), np.nan)
             for tid in ts_ids
         }
 

@@ -96,7 +96,28 @@ def _cross_structural_for_model(
                 residuals_ok = False
                 break
         if residuals_ok:
-            Y_df = assemble_long_frame(level_to_residual, "residual", model_name, "date")
+            # hierarchicalforecast >=1.5 needs Y_df with:
+            #   - 'y'           column = historical actuals
+            #   - '<model_name>' column = in-sample fitted values
+            # so the library can compute residuals = y - y_hat_insample internally.
+            pieces: list[pd.DataFrame] = []
+            for df in level_to_residual.values():
+                if df is None or df.empty:
+                    continue
+                sub = df[["ts_id", "date", "actual", "fitted"]].rename(
+                    columns={
+                        "ts_id": "unique_id",
+                        "date": "ds",
+                        "actual": "y",
+                        "fitted": model_name,
+                    }
+                )
+                pieces.append(sub)
+            if pieces:
+                Y_df = pd.concat(pieces, ignore_index=True)
+                Y_df["ds"] = pd.to_datetime(Y_df["ds"])
+            else:
+                Y_df = None
         else:
             methods_to_run = [m for m in methods_to_run if not CROSS_STRUCTURAL_METHODS[m][1]]
             if not methods_to_run:
@@ -113,8 +134,8 @@ def _cross_structural_for_model(
 
     reconcile_kwargs: Dict[str, Any] = {
         "Y_hat_df": Y_hat_df,
-        "S": S_df,
         "tags": tags,
+        "S_df": S_df,
     }
     if Y_df is not None:
         reconcile_kwargs["Y_df"] = Y_df

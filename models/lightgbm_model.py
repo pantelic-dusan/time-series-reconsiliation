@@ -73,6 +73,15 @@ class LightGBMModel(ForecastModel):
         x = prediction_row(last_values.astype(float), last_date, self._n_lags)
         return [float(self._models[h].predict(x)[0]) for h in range(horizon)]
 
+    def load(self, path) -> "LightGBMModel":
+        super().load(path)
+        # `save` persists ``self._model`` which was set to ``self._models`` at the
+        # end of ``fit``. Restore the per-horizon dict so ``predict`` and
+        # ``in_sample_fitted`` work after loading from disk.
+        if isinstance(self._model, dict):
+            self._models = self._model
+        return self
+
     def fit(self, dataframe: pd.DataFrame, config: Dict[str, Any]) -> "LightGBMModel":
         target_column = config["data"]["target_col"]
         time_column = config["data"]["time_col"]
@@ -152,7 +161,7 @@ class LightGBMModel(ForecastModel):
             values = group[target_column].values.astype(float)
             dates = pd.DatetimeIndex(pd.to_datetime(group[time_column]))
             n = len(values)
-            fitted = values.astype(float).copy()
+            fitted = np.full(len(values), np.nan)  # warmup positions stay NaN
             if n > self._n_lags:
                 X = build_feature_matrix(values, dates, self._n_lags)[:-1]
                 X_df = pd.DataFrame(X, columns=feature_cols)

@@ -90,6 +90,15 @@ class ARIMAModel(ForecastModel):
         }
         return self
 
+    def load(self, path) -> "ARIMAModel":
+        super().load(path)
+        if isinstance(self._model, dict):
+            self._fitted_models = self._model.get("fitted_models", {})
+            self._last_dates = self._model.get("last_dates", {})
+            self._last_values = self._model.get("last_values", {})
+            self._freq = self._model.get("freq")
+        return self
+
     def predict(self, horizon: int, config: Dict[str, Any]) -> pd.DataFrame:
         time_column = config["data"]["time_col"]
         all_forecasts = []

@@ -16,7 +16,7 @@ pmdarima = "^2.0"
 prophet = "^1.1"
 neuralforecast = "^1.7"
 gluonts = "^0.14"
-torch = "^2.0"
+torch = {version = "^2.0", source = "pytorch-cu121"}
 lightning = "^2.0"
 transformers = "^4.40"
 chronos-forecasting = "^2.0"
@@ -30,6 +30,11 @@ seaborn = "^0.13"
 plotly = "^6.0"
 ipykernel = "^7.2.0"
 hierarchicalforecast = "^1.5.1"
+
+[[tool.poetry.source]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

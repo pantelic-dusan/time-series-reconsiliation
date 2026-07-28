@@ -10,7 +10,7 @@ import pandas as pd
 from models import MODEL_REGISTRY
 from utils.aggregation_utils import iter_levels
 from utils.logging_utils import setup_logging, timed
-from utils.residuals_utils import load_or_compute_residuals
+from utils.residuals_utils import align_level_residuals, load_or_compute_residuals
 from utils.utils import (
     load_config,
     load_hpo_results,
@@ -52,8 +52,15 @@ def run_level(
 
         model_params = resolve_model_params(model_config, param_overrides)
         checkpoint_path = checkpoint_dir / f"{model_name}.pkl"
-
-        if not checkpoint_path.exists():
+        # DeepAR (and any future dir-based model) saves a directory, not a .pkl.
+        # load() already strips .suffix, so passing deepar.pkl works once the dir exists.
+        # Prophet saves as <name>.json; DeepAR/NHITS save as a directory.
+        checkpoint_exists = (
+            checkpoint_path.exists()
+            or checkpoint_path.with_suffix(".json").exists()
+            or checkpoint_path.with_suffix("").is_dir()
+        )
+        if not checkpoint_exists:
             logger.warning(
                 f"  [{model_name}] checkpoint missing ({checkpoint_path}), skipping."
             )
@@ -115,6 +122,7 @@ def run_residuals(config: Dict[str, Any], resume: bool = True) -> None:
                 param_overrides=all_hpo_results.get(level_label),
                 resume=resume,
             )
+            align_level_residuals(residuals_root, level_label)
 
     logger.info("Residual computation complete across all hierarchy levels.")
 

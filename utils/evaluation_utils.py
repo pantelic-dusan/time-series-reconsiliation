@@ -86,7 +86,7 @@ ALL_METRICS = {
 
 def compute_metrics(actual: np.ndarray, forecast: np.ndarray) -> Dict[str, float]:
     """Compute all forecasting metrics for a single pair of arrays."""
-    return {name: func(actual, forecast) for name, func in ALL_METRICS.items()}
+    return {name: func(actual, forecast.clip(min=0)) for name, func in ALL_METRICS.items()}
 
 
 def evaluate_model(

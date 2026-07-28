@@ -35,6 +35,10 @@ def compute_residuals(
     """Load the saved model and compute one-step-ahead in-sample residuals.
 
     Returns a DataFrame with columns ``ts_id, date, actual, fitted, residual``.
+    Rows where the model could not produce a fitted value (NaN) are dropped;
+    this naturally handles each model's own warm-up (AR lags, RNN context, etc.).
+    Cross-model alignment to a common start date is handled separately by
+    ``align_level_residuals``.
     """
     target_column = config["data"]["target_col"]
     time_column = config["data"]["time_col"]
@@ -50,7 +54,59 @@ def compute_residuals(
 
     merged = actual_df.merge(fitted_df, on=["ts_id", "date"], how="inner")
     merged["residual"] = merged["actual"].astype(float) - merged["fitted"].astype(float)
+
+    merged = (
+        merged
+        .sort_values(["ts_id", "date"])
+        .dropna(subset=["fitted", "residual"])
+        .reset_index(drop=True)
+    )
     return merged[["ts_id", "date", "actual", "fitted", "residual"]]
+
+
+def align_level_residuals(residuals_root: Path, level_label: str) -> None:
+    """Trim all model residual files in a level to share the same start date.
+
+    Different models have different warm-up lengths, so their residuals may
+    start at different dates even within the same hierarchy level.  This
+    function finds the *latest* start date (i.e. the tightest common cutoff)
+    across all ``*_residuals.csv`` files for the level and trims every file
+    that starts before that date, writing the result back in place.
+    """
+    level_dir = Path(residuals_root) / level_label
+    if not level_dir.exists():
+        return
+
+    csv_files = sorted(level_dir.glob("*_residuals.csv"))
+    if len(csv_files) <= 1:
+        return
+
+    file_starts: Dict[Path, "pd.Timestamp"] = {}
+    for f in csv_files:
+        try:
+            tmp = pd.read_csv(f, usecols=["date"])
+            tmp["date"] = pd.to_datetime(tmp["date"])
+            file_starts[f] = tmp["date"].min()
+        except Exception as exc:
+            logger.warning(f"  [align] could not read {f.name}: {exc}")
+
+    if not file_starts:
+        return
+
+    common_cutoff = max(file_starts.values())
+
+    for f, start in file_starts.items():
+        if start >= common_cutoff:
+            continue
+        df = pd.read_csv(f)
+        df["date"] = pd.to_datetime(df["date"])
+        trimmed = df[df["date"] >= common_cutoff].reset_index(drop=True)
+        trimmed.to_csv(f, index=False)
+        logger.info(
+            f"  [align] {level_label}/{f.name}: trimmed start "
+            f"{start.date()} → {common_cutoff.date()} "
+            f"({len(df) - len(trimmed)} rows removed)"
+        )
 
 
 def load_or_compute_residuals(

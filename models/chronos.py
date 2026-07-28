@@ -40,7 +40,11 @@ class ChronosModel(ForecastModel):
         super().__init__(model_name="chronos", params=params)
         self._freq: str | None = None
         self._series_contexts: Dict[str, tuple] = {}
-        self._device: str = self.params.get("device", "cpu")
+        # ``device`` accepts "auto", "cuda"/"gpu", or "cpu". "auto" picks CUDA
+        # if available else CPU. Falls back to CPU with a warning when GPU
+        # is requested but unavailable.
+        from utils.utils import resolve_torch_device
+        self._device: str = resolve_torch_device(self.params.get("device", "auto"))
         self._model_path: str = self.params.get("model_path", "amazon/chronos-2")
         self._kind: str = _detect_kind(self._model_path)
         self._pipeline = None
@@ -237,9 +241,9 @@ class ChronosModel(ForecastModel):
         if max_window is not None:
             start_t = max(start_t, max_T - int(max_window))
 
-        # Initialize fitted = actual (so first start_t timesteps have residual = 0).
+        # Initialize fitted = NaN; warmup positions (t < start_t) stay NaN.
         fitted_per_series: dict[str, np.ndarray] = {
-            tid: per_series[tid][0].astype(float).copy() for tid in ts_ids
+            tid: np.full(len(per_series[tid][0]), np.nan) for tid in ts_ids
         }
 
         for t in range(start_t, end_t):
