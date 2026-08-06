@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.17)  24 JUL 2026 09:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.17)  31 JUL 2026 22:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1098,33 +1098,33 @@ Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'serbianc'.
 LaTeX Font Info:    Trying to load font information for T2A+cmsrbr on input lin
-e 85.
+e 84.
 (C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/cmsrb\t2acmsrbr.fd
 File: t2acmsrbr.fd 
 )
 (MasterRad.aux)
 \openout1 = `MasterRad.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for T2A/cmr/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 85.
-LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for T2A/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
 
 (C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
 kii
@@ -1165,37 +1165,37 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 )
 Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 ))
-Package csquotes Info: Redefining character " on input line 85.
-Package hyperref Info: Link coloring OFF on input line 85.
+Package csquotes Info: Redefining character " on input line 84.
+Package hyperref Info: Link coloring OFF on input line 84.
 (MasterRad.out) (MasterRad.out)
 \@outlinefile=\write4
 \openout4 = `MasterRad.out'.
 
 \c@lstlisting=\count398
 LaTeX Font Info:    Trying to load font information for T2A+fos on input line 9
-1.
-LaTeX Font Info:    No file T2Afos.fd. on input line 91.
+0.
+LaTeX Font Info:    No file T2Afos.fd. on input line 90.
 
 
 LaTeX Font Warning: Font shape `T2A/fos/m/n' undefined
-(Font)              using `T2A/cmr/m/n' instead on input line 91.
+(Font)              using `T2A/cmr/m/n' instead on input line 90.
 
 
 LaTeX Font Warning: Font shape `T2A/fos/m/n' in size <16> not available
-(Font)              size <17.28> substituted on input line 91.
+(Font)              size <17.28> substituted on input line 90.
 
 <matf.png, id=91, 346.29375pt x 409.53pt>
 File: matf.png Graphic file (type png)
 <use matf.png>
-Package pdftex.def Info: matf.png  used on input line 91.
+Package pdftex.def Info: matf.png  used on input line 90.
 (pdftex.def)             Requested size: 85.35826pt x 100.94499pt.
 
 LaTeX Font Warning: Font shape `T2A/fos/m/n' in size <22> not available
-(Font)              size <20.74> substituted on input line 91.
+(Font)              size <20.74> substituted on input line 90.
 
 
 LaTeX Font Warning: Font shape `T2A/fos/b/n' undefined
-(Font)              using `T2A/fos/m/n' instead on input line 91.
+(Font)              using `T2A/fos/m/n' instead on input line 90.
 
 [1
 
@@ -1207,47 +1207,36 @@ LaTeX Font Warning: Font shape `T2A/fos/b/n' undefined
 
 {C:/Users/pan3bg/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/cmsrb/cmsrbt2a.e
 nc}]
-Underfull \hbox (badness 10000) in paragraph at lines 97--97
+LaTeX Font Info:    Trying to load font information for U+msa on input line 96.
+
+
+(C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 96.
+
+
+(C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+Underfull \hbox (badness 10000) in paragraph at lines 96--96
 
  []
 
 [3
 
 
-] [4] (MasterRad.toc
-LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
-
-(C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
-
-(C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
-File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-))
-[5
+] (MasterRad.toc) [4
 
 ]
 \CYRG \cyrl \cyra \cyrv \cyra  1.
 
-LaTeX Warning: Citation `makridakis2020m4' on page 1 undefined on input line 11
-0.
+LaTeX Warning: Citation `makridakis2020m4' on page 1 undefined on input line 10
+9.
 
 
 LaTeX Warning: Citation `hyndman2021forecasting' on page 1 undefined on input l
-ine 110.
-
-
-Overfull \hbox (7.07294pt too wide) in paragraph at lines 110--111
-[]\T2A/cmsrbr/m/n/12 Предвиўа»е (про-гно-зи-ра»е) вре-мен-ских се-риjа (енгл. t
-ime series forecasting)
- []
-
-
-Overfull \hbox (52.37871pt too wide) in paragraph at lines 117--118
-[]\T2A/cmsrbr/b/n/12 Структуралне: \T2A/cmsrbr/m/n/12 Пред-ста-в§аjу про-сторну
- или ло-гичку агре-га-циjу/декомпозициjу
- []
+ine 109.
 
 [1
 
@@ -1255,109 +1244,123 @@ Overfull \hbox (52.37871pt too wide) in paragraph at lines 117--118
 ]
 
 LaTeX Warning: Citation `athanasopoulos2017forecasting' on page 2 undefined on 
-input line 118.
+input line 117.
+
+
+LaTeX Warning: Citation `dangerfield1992bottom' on page 2 undefined on input li
+ne 120.
+
+
+LaTeX Warning: Citation `gross1990disaggregation' on page 2 undefined on input 
+line 120.
 
 
 LaTeX Warning: Citation `athanasopoulos2009hierarchical' on page 2 undefined on
- input line 121.
+ input line 120.
 
 
 LaTeX Warning: Citation `hyndman2011optimal' on page 2 undefined on input line 
-123.
+122.
 
 
 LaTeX Warning: Citation `wickramasuriya2019optimal' on page 2 undefined on inpu
-t line 123.
+t line 122.
 
 
 LaTeX Warning: Citation `kourentzes2019cross' on page 2 undefined on input line
- 123.
+ 122.
 
 
-LaTeX Warning: Citation `lim2021temporal' on page 2 undefined on input line 125
+LaTeX Warning: Citation `lim2021temporal' on page 2 undefined on input line 124
 .
 
 
 LaTeX Warning: Citation `oreshkin2019nbeats' on page 2 undefined on input line 
-125.
+124.
 
 
 LaTeX Warning: Citation `ansari2024chronos' on page 2 undefined on input line 1
-25.
+24.
 
 
-LaTeX Warning: Citation `das2023timesfm' on page 2 undefined on input line 125.
+LaTeX Warning: Citation `das2023timesfm' on page 2 undefined on input line 124.
 
 
 [2]
 
 LaTeX Warning: Citation `schafer2005shrinkage' on page 3 undefined on input lin
-e 132.
+e 131.
 
 
-Overfull \hbox (0.2987pt too wide) in paragraph at lines 132--133
-\T2A/cmsrbr/m/n/12 дра-стично пре-ва-зи-лази броj ра-спо-ло-жи-вих исто-риj-ски
-х оп-сер-ва-циjа ([]60),
- []
-
-
-Overfull \hbox (17.4465pt too wide) in paragraph at lines 134--135
+Overfull \hbox (17.4465pt too wide) in paragraph at lines 133--134
 []\T2A/cmsrbr/b/n/12 Сукоб ма-те-ма-тичке ко-хе-рент-но-сти и фи-зич-ких огра-н
 и-че»а: \T2A/cmsrbr/m/n/12 Ускла-
  []
 
 [3] [4]
 LaTeX Font Info:    Trying to load font information for TS1+cmsrbr on input lin
-e 152.
+e 150.
 
 (C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/cmsrb\ts1cmsrbr.fd
 File: ts1cmsrbr.fd 
 )
+Overfull \hbox (23.2145pt too wide) in paragraph at lines 153--154
+[]\T2A/cmsrbr/m/n/12 Теме§ни пре-тре-ни-рани мо-дели за вре-мен-ске се-риjе (\T
+2A/cmsrbr/m/it/12 Chronos\T2A/cmsrbr/m/n/12 , \T2A/cmsrbr/m/it/12 TimesFM\T2A/c
+msrbr/m/n/12 ). 
+ []
+
 [5{C:/Users/pan3bg/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/cmsrb/cmsrbts1
 .enc}] [6]
 \CYRG \cyrl \cyra \cyrv \cyra  2.
 
 LaTeX Warning: Citation `hyndman2021forecasting' on page 7 undefined on input l
-ine 185.
+ine 186.
 
 [7
 
 ] [8] [9]
-Overfull \hbox (21.6406pt too wide) in paragraph at lines 259--260
+Overfull \hbox (21.6406pt too wide) in paragraph at lines 260--261
 []\T2A/cmsrbr/m/n/12 Наjнижи (ба-зни) ниво чине све ком-би-на-циjе ових атри-бу
 та ($\OML/cmmsrbm/m/it/12 y[]; y[]; y[]; y[]$\T2A/cmsrbr/m/n/12 ),
  []
 
 
 LaTeX Warning: Citation `athanasopoulos2017forecasting' on page 10 undefined on
- input line 297.
+ input line 298.
 
 [10]
-Overfull \hbox (23.4654pt too wide) in paragraph at lines 301--302
+Overfull \hbox (23.4654pt too wide) in paragraph at lines 302--303
 \T2A/cmsrbr/m/n/12 риjа). Вре-мен-ски век-тор си-стема за оваj квар-тал jе $\OT
 1/cmrsrbm/bx/n/12 y[] \OT1/cmrsrbm/m/n/12 = [][]$\T2A/cmsrbr/m/n/12 . 
+ []
+
+
+Overfull \hbox (1.16084pt too wide) in paragraph at lines 339--341
+[]\T2A/cmsrbr/m/n/12 Све ли-не-арне ме-тоде ускла-ўи-ва»а могу се пред-ста-вити
+ као ли-не-арне транс-
  []
 
 [11]
 
 LaTeX Warning: Citation `wickramasuriya2019optimal' on page 12 undefined on inp
-ut line 344.
+ut line 346.
 
 
 LaTeX Warning: Citation `dangerfield1992bottom' on page 12 undefined on input l
-ine 348.
+ine 350.
+
+
+LaTeX Warning: Citation `gross1990disaggregation' on page 12 undefined on input
+ line 370.
 
 [12]
 
-LaTeX Warning: Citation `gross1990disaggregation' on page 13 undefined on input
- line 368.
-
-
 LaTeX Warning: Citation `hyndman2021forecasting' on page 13 undefined on input 
-line 386.
+line 388.
 
 [13]
-Overfull \hbox (13.17935pt too wide) in paragraph at lines 405--406
+Overfull \hbox (13.17935pt too wide) in paragraph at lines 407--408
 []\T2A/cmsrbr/m/n/12 К§учни за-к§у-чак коjи про-и-зи-лази из ана-лизе ових ма-т
 рица ($\OT1/cmrsrbm/bx/n/12 P[]\OML/cmmsrbm/m/it/12 ; \OT1/cmrsrbm/bx/n/12 P[]\
 OML/cmmsrbm/m/it/12 ; \OT1/cmrsrbm/bx/n/12 P[]$\T2A/cmsrbr/m/n/12 )
@@ -1365,44 +1368,40 @@ OML/cmmsrbm/m/it/12 ; \OT1/cmrsrbm/bx/n/12 P[]$\T2A/cmsrbr/m/n/12 )
 
 
 LaTeX Warning: Citation `wickramasuriya2019optimal' on page 14 undefined on inp
-ut line 410.
+ut line 412.
 
 [14]
-
-LaTeX Warning: Citation `hyndman2011optimal' on page 15 undefined on input line
- 426.
-
 
 LaTeX Warning: Citation `hyndman2011optimal' on page 15 undefined on input line
  428.
 
 
+LaTeX Warning: Citation `hyndman2011optimal' on page 15 undefined on input line
+ 429.
+
+
 LaTeX Warning: Citation `wickramasuriya2019optimal' on page 15 undefined on inp
-ut line 430.
+ut line 431.
 
 
-Overfull \hbox (5.08817pt too wide) in paragraph at lines 432--434
-\T2A/cmsrbr/m/n/12 не-ре-гу-ли-сану узо-рачку ко-ва-ри-jан-сну ма-трицу гре-шак
-а $\OT1/cmrsrbm/bx/n/12 W[] \OT1/cmrsrbm/m/n/12 = []\OT1/cmrsrbm/bx/n/12 E[]E$
+Overfull \hbox (22.05614pt too wide) in paragraph at lines 433--434
+\T2A/cmsrbr/m/n/12 не-ре-гу-ла-ри-зо-вану узо-рачку ма-трицу ко-ва-ри-jансе гре
+-шака $\OT1/cmrsrbm/bx/n/12 W[] \OT1/cmrsrbm/m/n/12 = []\OT1/cmrsrbm/bx/n/12 E[
+]E$
  []
 
-[15]
 
-LaTeX Warning: Citation `schafer2005shrinkage' on page 16 undefined on input li
+LaTeX Warning: Citation `schafer2005shrinkage' on page 15 undefined on input li
 ne 435.
 
 
-LaTeX Warning: Citation `schafer2005shrinkage' on page 16 undefined on input li
-ne 439.
+LaTeX Warning: Citation `olivares2022hierarchicalforecast' on page 15 undefined
+ on input line 435.
 
-
-LaTeX Warning: Citation `olivares2022hierarchicalforecast' on page 16 undefined
- on input line 439.
-
-[16] [17] [18]
+[15] [16] [17] [18]
 
 LaTeX Warning: Citation `wickramasuriya2019optimal' on page 19 undefined on inp
-ut line 522.
+ut line 521.
 
 [19] [20]
 \CYRG \cyrl \cyra \cyrv \cyra  3.
@@ -1410,83 +1409,149 @@ ut line 522.
 
 ]
 LaTeX Font Info:    Trying to load font information for T2A+cmsrbt on input lin
-e 557.
+e 552.
 
 (C:\Users\pan3bg\AppData\Local\Programs\MiKTeX\tex/latex/cmsrb\t2acmsrbt.fd
 File: t2acmsrbt.fd 
 )
-[22] [23] [24] [25] [26] [27]
-Overfull \hbox (4.52264pt too wide) in paragraph at lines 698--699
+[22] [23] [24] [25] [26]
+Overfull \hbox (10.08374pt too wide) in paragraph at lines 664--665
+[]\T2A/cmsrbr/m/n/12 Критериjум оп-ти-ми-за-циjе jе WMAPE (енг. weighted mean a
+bsolute percentage
+ []
+
+[27]
+Overfull \hbox (4.52264pt too wide) in paragraph at lines 690--691
 []\T2A/cmsrbr/b/n/12 AutoARIMA\T2A/cmsrbr/m/n/12 : Ко-ри-шЈе-»ем ал-го-ритма из
  би-бли-о-теке \T2A/cmsrbt/m/n/12 pmdarima\T2A/cmsrbr/m/n/12 , за сваку
  []
 
+
+LaTeX Warning: Citation `taylor2018forecasting' on page 28 undefined on input l
+ine 694.
+
 [28]
-Overfull \hbox (25.79861pt too wide) in paragraph at lines 716--717
-[]\T2A/cmsrbr/b/n/12 LightGBM\T2A/cmsrbr/m/n/12 : Им-пле-мен-ти-ран преко класе
- \T2A/cmsrbt/m/n/12 LGBMRegressor \T2A/cmsrbr/m/n/12 из оквира \T2A/cmsrbt/m/n/
-12 lightgbm\T2A/cmsrbr/m/n/12 .
+
+LaTeX Warning: Citation `breiman2001random' on page 29 undefined on input line 
+706.
+
+
+LaTeX Warning: Citation `ke2017lightgbm' on page 29 undefined on input line 708
+.
+
+
+Overfull \hbox (7.50264pt too wide) in paragraph at lines 708--709
+\T2A/cmsrbt/m/n/12 lightgbm\T2A/cmsrbr/m/n/12 . За-снива се на ал-го-ритму гра-
+ди-jент-ног по-jа-ча-ва»а (енг. \T2A/cmsrbr/m/it/12 gradient
  []
 
 [29]
-Overfull \hbox (18.32262pt too wide) in paragraph at lines 742--743
-[]\T2A/cmsrbr/b/n/12 DeepAR\T2A/cmsrbr/m/n/12 : Им-пле-мен-ти-ран преко класе \
-T2A/cmsrbt/m/n/12 DeepAREstimator \T2A/cmsrbr/m/n/12 из оквира \T2A/cmsrbt/m/n/
-12 GluonTS\T2A/cmsrbr/m/n/12 .
- []
+
+LaTeX Warning: Citation `salinas2020deepar' on page 30 undefined on input line 
+734.
+
+
+LaTeX Warning: Citation `challu2023nhits' on page 30 undefined on input line 73
+6.
 
 [30]
-Overfull \hbox (4.82141pt too wide) in paragraph at lines 757--758
-[]\T2A/cmsrbr/b/n/12 TimesFM (Time Series Foundation Model)\T2A/cmsrbr/m/n/12 :
- Мо-дел ра-зви-jен од стране
+
+LaTeX Warning: Citation `ansari2024chronos' on page 31 undefined on input line 
+746.
+
+
+Overfull \hbox (5.98676pt too wide) in paragraph at lines 746--747
+\T2A/cmsrbr/m/n/12 те-ме§-них пре-тре-ни-ра-них мо-дела ра-зви-jе-них од стране
+ ком-па-ниjе Amazon.
  []
 
-[31] [32] [33] [34]
+
+LaTeX Warning: Citation `das2023timesfm' on page 31 undefined on input line 749
+.
+
+[31] [32]
+Overfull \hbox (1.12541pt too wide) in paragraph at lines 784--786
+[]\T2A/cmsrbr/b/n/12 nRMSE (нор-ма-ли-зо-вани ко-рен сред»е ква-дратне гре-шке)
+: \T2A/cmsrbr/m/n/12 Мери
+ []
+
+[33] [34]
 \CYRG \cyrl \cyra \cyrv \cyra  4.
-<slike/metrike_neuskladjeni_osnovni_nivo.png, id=373, 307.90031pt x 225.09094pt
->
-File: slike/metrike_neuskladjeni_osnovni_nivo.png Graphic file (type png)
-<use slike/metrike_neuskladjeni_osnovni_nivo.png>
-Package pdftex.def Info: slike/metrike_neuskladjeni_osnovni_nivo.png  used on i
-nput line 848.
-(pdftex.def)             Requested size: 383.3974pt x 280.3051pt.
+
+Overfull \hbox (7.01985pt too wide) in paragraph at lines 843--860
+ [][] 
+ []
+
 [35
 
-] [36 <./slike/metrike_neuskladjeni_osnovni_nivo.png>]
-
-LaTeX Warning: Reference `fig:reconciliation_csm_heatmaps' on page 37 undefined
- on input line 871.
-
-
-Overfull \hbox (9.04596pt too wide) in paragraph at lines 871--872
-\T2A/cmsrbr/m/n/12 jе-дан од наj-ва-жни-jих на-лаза овог рада. Као што то-плотн
-е мапе (енгл. \T2A/cmsrbr/m/it/12 heatmaps\T2A/cmsrbr/m/n/12 )
+] [36]
+<slike/heatmap_csm_group1.png, id=376, 1582.713pt x 879.5259pt>
+File: slike/heatmap_csm_group1.png Graphic file (type png)
+<use slike/heatmap_csm_group1.png>
+Package pdftex.def Info: slike/heatmap_csm_group1.png  used on input line 885.
+(pdftex.def)             Requested size: 426.0pt x 236.72362pt.
+<slike/heatmap_csm_group2.png, id=378, 1582.713pt x 879.5259pt>
+File: slike/heatmap_csm_group2.png Graphic file (type png)
+<use slike/heatmap_csm_group2.png>
+Package pdftex.def Info: slike/heatmap_csm_group2.png  used on input line 892.
+(pdftex.def)             Requested size: 426.0pt x 236.72362pt.
+ [37] [38 <./slike/heatmap_csm_group1.png> <./slike/heatmap_csm_group2.png>]
+Overfull \hbox (22.44878pt too wide) in paragraph at lines 903--904
+[]\T2A/cmsrbr/m/n/12 Jедини из-у-зе-так коjи по-ка-зуjе ви-сок ниво ста-бил-но-
+сти jе-сте ме-тода \T2A/cmsrbr/b/n/12 WLS_Var\T2A/cmsrbr/m/n/12 .
  []
 
-<slike/strukturalno_uskladjivanje_heatmap.png, id=386, 1582.713pt x 732.8178pt>
-
-File: slike/strukturalno_uskladjivanje_heatmap.png Graphic file (type png)
-<use slike/strukturalno_uskladjivanje_heatmap.png>
-Package pdftex.def Info: slike/strukturalno_uskladjivanje_heatmap.png  used on 
-input line 875.
-(pdftex.def)             Requested size: 426.0pt x 197.23726pt.
-
-Overfull \hbox (12.92052pt too wide) in paragraph at lines 882--883
-[]\T2A/cmsrbr/b/n/12 Jедини из-у-зе-так у струк-тур-ном ускла-ўи-ва»у пред-ста-
-в§а WLS_Var
+<slike/hierarchy_comparison.png, id=394, 1582.713pt x 1755.4383pt>
+File: slike/hierarchy_comparison.png Graphic file (type png)
+<use slike/hierarchy_comparison.png>
+Package pdftex.def Info: slike/hierarchy_comparison.png  used on input line 907
+.
+(pdftex.def)             Requested size: 426.0pt x 472.47467pt.
+<slike/heatmap_ct_group1.png, id=396, 1582.713pt x 879.5259pt>
+File: slike/heatmap_ct_group1.png Graphic file (type png)
+<use slike/heatmap_ct_group1.png>
+Package pdftex.def Info: slike/heatmap_ct_group1.png  used on input line 920.
+(pdftex.def)             Requested size: 426.0pt x 236.72362pt.
+<slike/heatmap_ct_group2.png, id=397, 1582.713pt x 879.5259pt>
+File: slike/heatmap_ct_group2.png Graphic file (type png)
+<use slike/heatmap_ct_group2.png>
+Package pdftex.def Info: slike/heatmap_ct_group2.png  used on input line 927.
+(pdftex.def)             Requested size: 426.0pt x 236.72362pt.
+[39] [40 <./slike/hierarchy_comparison.png>] [41 <./slike/heatmap_ct_group1.png
+> <./slike/heatmap_ct_group2.png>] [42]
+Overfull \hbox (82.44572pt too wide) in paragraph at lines 952--967
+ [][] 
  []
 
-[37] [38 <./slike/strukturalno_uskladjivanje_heatmap.png>] [39] [40]
+[43]
+Overfull \hbox (21.87457pt too wide) in paragraph at lines 1007--1008
+[]\T2A/cmsrbr/b/n/12 Емпириjски при-ступи (WLS_Var и MinT_Shrink): \T2A/cmsrbr/
+m/n/12 Ме-тода \T2A/cmsrbr/m/it/12 WLS_Var
+ []
+
+[44] [45] [46]
+Overfull \hbox (32.1244pt too wide) in paragraph at lines 1030--1031
+\T2A/cmsrbr/m/n/12 ме-нити струк-турно ускла-ўи-ва»е, али ис-к§у-чиво кроз ме-т
+оду \T2A/cmsrbr/b/it/12 WLS_Var\T2A/cmsrbr/m/n/12 ,
+ []
+
+[47]
 \CYRG \cyrl \cyra \cyrv \cyra  5.
-[41
-
-] [42]
-No file MasterRad.bbl.
-[43] [44
-
-
+[48
 
 ]
+Overfull \hbox (19.96484pt too wide) in paragraph at lines 1061--1062
+[]\T2A/cmsrbr/m/n/12 Друго огра-ни-че»е ве-зано jе за мо-деле кла-сич-ног ма-ши
+н-ског уче»а (\T2A/cmsrbr/m/it/12 LightGBM\T2A/cmsrbr/m/n/12 ,
+ []
+
+[49]
+
+LaTeX Warning: Citation `mancuso2021machine' on page 50 undefined on input line
+ 1070.
+
+No file MasterRad.bbl.
+[50]
 \tf@toc=\write5
 \openout5 = `MasterRad.toc'.
 
@@ -1506,20 +1571,17 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package rerunfilecheck Info: File `MasterRad.out' has not changed.
-(rerunfilecheck)             Checksum: C42E5472C111174567F843A975581A6D;6846.
+(rerunfilecheck)             Checksum: 7A82F27E7DE86EEE5C5C24DA04DBFD8B;6810.
  ) 
 Here is how much of TeX's memory you used:
- 20051 strings out of 467691
- 312240 string characters out of 5414503
- 792446 words of memory out of 5000000
- 48657 multiletter control sequences out of 15000+600000
+ 20087 strings out of 467691
+ 312912 string characters out of 5414503
+ 794168 words of memory out of 5000000
+ 48684 multiletter control sequences out of 15000+600000
  668370 words of font info for 96 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 85i,14n,104p,2429b,659s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 85i,14n,104p,3115b,681s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\pan3bg\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\larm1
 440.pk> <C:\Users\pan3bg\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\
 larm2074.pk> <C:\Users\pan3bg\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dp
@@ -1541,9 +1603,9 @@ s/type1/public/cmsrb/cmsrbtr.pfb><C:/Users/pan3bg/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/pan3bg/AppData/Local/Progr
 ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/pan3bg/AppData/Lo
 cal/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on MasterRad.pdf (49 pages, 996716 bytes).
+Output written on MasterRad.pdf (54 pages, 2932990 bytes).
 PDF statistics:
- 616 PDF objects out of 1000 (max. 8388607)
- 154 named destinations out of 1000 (max. 500000)
- 192 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 649 PDF objects out of 1000 (max. 8388607)
+ 163 named destinations out of 1000 (max. 500000)
+ 207 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,10 +1,9 @@
 \babel@toc {serbianc}{}\relax 
 \contentsline {chapter}{\chapternumberline {1}Увод}{1}{chapter.1}%
-\contentsline {section}{\numberline {1.1}Контекст и значај проблема/области}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.1}Контекст и значај проблема и области}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Дефиниција истраживачког проблема}{3}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Примарни циљеви рада}{4}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Kључни резултати}{5}{section.1.4}%
-\contentsline {section}{\numberline {1.5}Преглед структуре рада}{5}{section.1.5}%
+\contentsline {section}{\numberline {1.4}Кључни резултати}{5}{section.1.4}%
 \contentsline {chapter}{\chapternumberline {2}Теоријске основе}{7}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Основни концепти предвиђања временских серија}{7}{section.2.1}%
 \contentsline {section}{\numberline {2.2}Хијерархијске и груписане временске серије}{8}{section.2.2}%
@@ -13,29 +12,30 @@
 \contentsline {section}{\numberline {2.3}Методе за усклађивање предвиђања}{11}{section.2.3}%
 \contentsline {subsection}{Општи оквир усклађивања и традиционалне методе}{11}{section*.4}%
 \contentsline {subsection}{Метод минималног трага (MinT)}{14}{section*.5}%
-\contentsline {subsection}{Апроксимације коваријационе матрице (MinT варијанте)}{15}{section*.6}%
-\contentsline {subsection}{Рачунарски изазови, нумеричка стабилност и проблем ненегативности}{19}{section*.7}%
+\contentsline {subsection}{Апроксимације коваријационе матрице (варијанте MinT)}{15}{section*.6}%
+\contentsline {subsection}{Рачунарски изазови, нумеричка стабилност и проблем ненегативности}{18}{section*.7}%
 \contentsline {chapter}{\chapternumberline {3}Дизајн истраживања и методологија}{21}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Методолошки оквир истраживања}{21}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Карактеристике и припрема скупа података}{21}{section.3.2}%
+\contentsline {section}{\numberline {3.1}Карактеристике и припрема скупа података}{21}{section.3.1}%
 \contentsline {subsection}{Дизајн структурне хијерархије}{22}{section*.8}%
 \contentsline {subsection}{Временска агрегација и режими усклађивања}{24}{section*.9}%
-\contentsline {section}{\numberline {3.3}Поставка и процес спровођења експеримента}{26}{section.3.3}%
+\contentsline {section}{\numberline {3.2}Поставка и процес спровођења експеримента}{26}{section.3.2}%
 \contentsline {subsection}{Стратегија тренирања, валидације и оптимизације хиперпараметара}{26}{section*.10}%
 \contentsline {subsection}{Предиктивни модели}{28}{section*.11}%
 \contentsline {subsubsection}{Статистички модели}{28}{section*.12}%
 \contentsline {subsubsection}{Класични модели машинског учења}{29}{section*.13}%
 \contentsline {subsubsection}{Модели дубоког учења}{30}{section*.14}%
-\contentsline {subsubsection}{Фундациони модели}{31}{section*.15}%
+\contentsline {subsubsection}{Темељни претренирани модели}{31}{section*.15}%
 \contentsline {subsection}{Постпроцесирање прогноза: одсецање негативних вредности}{32}{section*.16}%
 \contentsline {subsection}{Критеријуми и метрике за евалуацију}{33}{section*.17}%
 \contentsline {chapter}{\chapternumberline {4}Резултати и дискусија}{35}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Анализа перформанси основних (неусклађених) предвиђања}{35}{section.4.1}%
+\contentsline {section}{\numberline {4.1}Анализа перформанси неусклађених предвиђања}{35}{section.4.1}%
 \contentsline {section}{\numberline {4.2}Упоредна анализа метода за усклађивање}{37}{section.4.2}%
-\contentsline {subsection}{Структурно усклађивање (CSM)}{37}{section*.18}%
-\contentsline {subsection}{Временско усклађивање (CT)}{38}{section*.19}%
-\contentsline {section}{\numberline {4.3}Утицај доменских ограничења: Квадратно програмирање вс. Клипинг}{39}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Валидација конзистентности усклађених предвиђања}{40}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Дискусија добијених резултата}{40}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Идентификација најбољих пракси за дати проблем}{40}{section.4.6}%
-\contentsline {chapter}{\chapternumberline {5}Закључак}{41}{chapter.5}%
+\contentsline {subsection}{Структурно усклађивање}{37}{section*.18}%
+\contentsline {subsection}{Временско усклађивање}{39}{section*.19}%
+\contentsline {section}{\numberline {4.3}Валидација и нарушавање хијерархијске кохерентности}{42}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Дискусија добијених резултата}{45}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Идентификација најбољих пракси за дати проблем}{46}{section.4.5}%
+\contentsline {chapter}{\chapternumberline {5}Закључак}{48}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Синтеза кључних налаза истраживања}{48}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Ограничења спроведене анализе}{49}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Препоруке за будућа истраживања и практичну примену}{50}{section.5.3}%
